@@ -1,22 +1,11 @@
-/* Copyright (c) 2015 Stanislaw Halik <sthalik@misaki.pl>
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- */
+#include "process-list.hpp"
 
-#pragma once
-
-#include <QDebug>
-#include <QStringList>
-
-#if defined _WIN32
+#ifdef _WIN32
 
 #include <windows.h>
 #include <tlhelp32.h>
 
-template<typename = void>
-static QStringList get_all_executable_names()
+QStringList get_all_executable_names()
 {
     QStringList ret;
     HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -33,27 +22,20 @@ static QStringList get_all_executable_names()
     }
 
     do {
-        ret.append(e.szExeFile);
+        ret.append(QString{e.szExeFile});
     } while (Process32Next(h, &e) == TRUE);
 
     CloseHandle(h);
 
     return ret;
 }
-#elif defined __APPLE__
-#include <libproc.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <cerrno>
-#include <cstring>
-#include <vector>
 
-template<typename = void>
-static QStringList get_all_executable_names()
+#elif defined __APPLE__
+
+QStringList get_all_executable_names()
 {
-    QStringList ret;
-    std::vector<int> vec;
+    std::vector<QString> ret; ret.reserve(512);
+    std::vector<int> vec; vec.reserve(512);
 
     while (true)
     {
@@ -135,7 +117,6 @@ static QStringList get_all_executable_names()
 
 #ifdef OTR_HAS_LIBPROC2
 #include <libproc2/pids.h>
-template<typename = void>
 QStringList get_all_executable_names()
 {
     QStringList ret;
@@ -174,7 +155,6 @@ QStringList get_all_executable_names()
 #include <proc/readproc.h>
 #include <cerrno>
 
-template<typename = void>
 QStringList get_all_executable_names()
 {
     QStringList ret;
@@ -203,9 +183,6 @@ QStringList get_all_executable_names()
 #endif
 
 #else
-template<typename = void>
-static QStringList get_all_executable_names()
-{
-    return QStringList();
-}
+QStringList get_all_executable_names() { return {}; }
+
 #endif
