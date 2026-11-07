@@ -13,39 +13,34 @@
     </message>
 </context>
 <context>
+    <name>UpdateDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Software update released</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Current version:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TextLabel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Released version:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t remind me again about this version</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>main_window</name>
-    <message>
-        <source>Raw tracker data</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Z</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Pitch</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Y</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>X</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Roll</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Yaw</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Game data</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Profile</source>
         <translation type="unfinished"></translation>
@@ -71,19 +66,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Input</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>🔨</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Output</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Filter</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -172,6 +155,10 @@ Exiting now.</source>
     </message>
     <message>
         <source>Don&apos;t run as root to remove these annoying messages.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -131,7 +131,9 @@ template <class F> struct OnScopeExit
 CamIntrinsics make_intrinsics(const cv::Mat& img, const Settings& settings)
 {
     const int w = img.cols, h = img.rows;
-    const double diag_fov = settings.fov * M_PI / 180.;
+    // TrackHat: the sensor lens is fixed, so the diagonal FOV is not user-configurable.
+    (void)settings;
+    constexpr double diag_fov = 60. * M_PI / 180.;
     const double fov_w = 2. * atan(tan(diag_fov / 2.) / sqrt(1. + h / (double)w * h / (double)w));
     const double fov_h = 2. * atan(tan(diag_fov / 2.) / sqrt(1. + w / (double)h * w / (double)h));
     const double focal_length_w = 1. / tan(.5 * fov_w);
@@ -367,7 +369,7 @@ bool NeuralNetTracker::detect()
         last_pose_affine_ = pose_affine;
     }
 
-    draw_gizmos(*face, last_pose_affine_);
+    draw_gizmos(*face, pose_affine);
 
     return true;
 }
@@ -497,28 +499,33 @@ bool NeuralNetTracker::load_and_initialize_model()
 
 bool NeuralNetTracker::open_camera()
 {
-    int rint = std::clamp(*settings_.resolution, 0, (int)std::size(resolution_choices) - 1);
-    resolution_tuple res = resolution_choices[rint];
-    int fps = enum_to_fps(settings_.force_fps);
+    // TrackHat: capture format is fixed, resolution/FPS/MJPEG are not user-configurable.
+    video::impl::camera::info args{};
+    args.width = 640;
+    args.height = 480;
+    args.fps = 60;
+    args.use_mjpeg = true;
 
     QMutexLocker l(&camera_mtx_);
 
-    camera_ = video::make_camera(settings_.camera_name);
+    camera_ = nullptr;
+    const QString name = settings_.camera_name;
+
+    // Empty name (default) or the explicit sensor name: use the TrackHat sensor.
+    if (name.isEmpty() || name == QStringLiteral("TrackHat sensor"))
+    {
+        camera_ = video::make_camera_(QStringLiteral("TrackHat sensor"));
+        if (camera_ && camera_->start(args))
+            return true;
+        // Default selection with no sensor attached falls through to the generic lookup.
+        if (!name.isEmpty())
+            return false;
+    }
+
+    camera_ = video::make_camera(name);
 
     if (!camera_)
         return false;
-
-    video::impl::camera::info args{};
-
-    if (res.width)
-    {
-        args.width = res.width;
-        args.height = res.height;
-    }
-    if (fps)
-        args.fps = fps;
-
-    args.use_mjpeg = settings_.use_mjpeg;
 
     if (!camera_->start(args))
     {
@@ -587,6 +594,8 @@ void NeuralNetTracker::run()
 
         update_fps(std::chrono::duration_cast<std::chrono::milliseconds>(clk.now() - t).count() * 1.e-3);
     }
+
+    camera_ = nullptr;
 }
 
 cv::Mat NeuralNetTracker::prepare_input_image(const video::frame& frame)
@@ -628,11 +637,16 @@ void NeuralNetTracker::update_fps(double dt)
 
 void NeuralNetTracker::data(double* data)
 {
-    Affine tmp = [&]()
+    const auto pose_opt = [&]()
     {
         QMutexLocker lck(&mtx_);
         return last_pose_affine_;
     }();
+
+    // TrackHat: nothing detected yet, leave the output untouched.
+    if (!pose_opt)
+        return;
+    const Affine& tmp = *pose_opt;
 
     const auto& mx = tmp.R.col(0);
     const auto& my = tmp.R.col(1);
@@ -663,7 +677,7 @@ void NeuralNetTracker::data(double* data)
 Affine NeuralNetTracker::pose()
 {
     QMutexLocker lck(&mtx_);
-    return last_pose_affine_;
+    return last_pose_affine_ ? *last_pose_affine_ : Affine{};
 }
 
 std::tuple<cv::Size, double, double> NeuralNetTracker::stats() const
@@ -680,58 +694,49 @@ QString NeuralNetTracker::get_posenet_filename() const
     return filename;
 }
 
-void NeuralNetDialog::make_fps_combobox()
-{
-    for (int k = 0; k < fps_MAX; k++)
-    {
-        const int hz = enum_to_fps(k);
-        const QString name = (hz == 0) ? tr("Default") : QString::number(hz);
-        ui_.cameraFPS->addItem(name, k);
-    }
-}
-
-void NeuralNetDialog::make_resolution_combobox()
-{
-    int k = 0;
-    for (const auto [w, h] : resolution_choices)
-    {
-        const QString s = (w == 0) ? tr("Default") : QString::number(w) + " x " + QString::number(h);
-        ui_.resolution->addItem(s, k++);
-    }
-}
-
 NeuralNetDialog::NeuralNetDialog() : trans_calib_(1, 2)
 {
     ui_.setupUi(this);
 
-    make_fps_combobox();
-    make_resolution_combobox();
+    // TrackHat: the advanced tuning/debug options are not exposed.
+    ui_.tuningOptionsBox->setVisible(false);
 
+    // Empty entry = default (the TrackHat sensor).
+    ui_.cameraName->addItem(QString{});
     for (const auto& str : video::camera_names())
         ui_.cameraName->addItem(str);
 
     tie_setting(settings_.camera_name, ui_.cameraName);
-    tie_setting(settings_.fov, ui_.cameraFOV);
     tie_setting(settings_.offset_fwd, ui_.tx_spin);
     tie_setting(settings_.offset_up, ui_.ty_spin);
     tie_setting(settings_.offset_right, ui_.tz_spin);
-    tie_setting(settings_.show_network_input, ui_.showNetworkInput);
-    tie_setting(settings_.roi_filter_alpha, ui_.roiFilterAlpha);
-    tie_setting(settings_.use_mjpeg, ui_.use_mjpeg);
-    tie_setting(settings_.roi_zoom, ui_.roiZoom);
-    tie_setting(settings_.num_threads, ui_.threadCount);
-    tie_setting(settings_.resolution, ui_.resolution);
-    tie_setting(settings_.force_fps, ui_.cameraFPS);
-    tie_setting(settings_.posenet_file, ui_.posenetFileDisplay);
     tie_setting(settings_.internal_filter_enabled, ui_.internal_filter_enabled);
+
+    {
+        const struct
+        {
+            QString label;
+            exposure_preset preset;
+        } presets[] = {
+            { tr("Near (1-3ft)"), exposure_preset::near },
+            { tr("Medium (3-6ft)"), exposure_preset::medium },
+            { tr("Far (6+ft)"), exposure_preset::far },
+            { tr("Custom"), exposure_preset::ignored },
+        };
+
+        for (const auto& [label, preset] : presets)
+            ui_.exposure_preset->addItem(label, int(preset));
+
+        tie_setting(cs_.exposure, ui_.exposure_preset);
+    }
 
     connect(ui_.buttonBox, SIGNAL(accepted()), this, SLOT(doOK()));
     connect(ui_.buttonBox, SIGNAL(rejected()), this, SLOT(doCancel()));
     connect(ui_.camera_settings, SIGNAL(clicked()), this, SLOT(camera_settings()));
-    connect(ui_.posenetSelectButton, SIGNAL(clicked()), this, SLOT(onSelectPoseNetFile()));
-    connect(&settings_.camera_name, value_::value_changed<QString>(), this, &NeuralNetDialog::update_camera_settings_state);
 
-    update_camera_settings_state(settings_.camera_name);
+    // The camera's own settings dialog is only useful with the "Custom" exposure preset.
+    connect(&cs_.exposure, value_::value_changed<int>(), this, [this](int) { update_camera_settings_state({}); });
+    update_camera_settings_state({});
 
     connect(&calib_timer_, &QTimer::timeout, this, &NeuralNetDialog::trans_calib_step);
     calib_timer_.setInterval(35);
@@ -745,11 +750,13 @@ NeuralNetDialog::NeuralNetDialog() : trans_calib_(1, 2)
 void NeuralNetDialog::save()
 {
     settings_.b->save();
+    cs_.b->save();
 }
 
 void NeuralNetDialog::reload()
 {
     settings_.b->reload();
+    cs_.b->reload();
 }
 
 void NeuralNetDialog::doOK()
@@ -777,7 +784,7 @@ void NeuralNetDialog::camera_settings()
 void NeuralNetDialog::update_camera_settings_state(const QString& name)
 {
     (void)name;
-    ui_.camera_settings->setEnabled(true);
+    ui_.camera_settings->setEnabled(cs_.exposure == exposure_preset::ignored);
 }
 
 void NeuralNetDialog::register_tracker(ITracker* x)
@@ -886,29 +893,6 @@ void NeuralNetDialog::startstop_trans_calib(bool start)
         ui_.tcalib_button->setText(tr("Stop calibration"));
     else
         ui_.tcalib_button->setText(tr("Start calibration"));
-}
-
-void NeuralNetDialog::onSelectPoseNetFile()
-{
-    const auto root = get_default_model_directory();
-    // Start with the current setting
-    QString filename = settings_.posenet_file;
-    // If the filename is relative then assume that the file is located under the
-    // model directory. Under regular use this should always be the case.
-    if (QFileInfo(filename).isRelative())
-        filename = root.absoluteFilePath(filename);
-    filename = QFileDialog::getOpenFileName(this, tr("Select Pose Net ONNX"), filename, tr("ONNX Files (*.onnx)"));
-    // In case the user aborted.
-    if (filename.isEmpty())
-        return;
-    // When a file under the model directory was selected we can get rid of the
-    // directory prefix. This is more robust than storing absolute paths, e.g.
-    // in case the user moves the opentrack install folder / reuses old settings.
-    // When the file is not in the model directory, we have to use the absolute path,
-    // which is also fine as developer feature.
-    if (filename.startsWith(root.absolutePath()))
-        filename = root.relativeFilePath(filename);
-    settings_.posenet_file = filename;
 }
 
 Settings::Settings() : opts("neuralnet-tracker")

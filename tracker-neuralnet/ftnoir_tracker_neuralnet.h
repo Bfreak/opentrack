@@ -19,6 +19,7 @@
 #include "cv/video-widget.hpp"
 #include "options/options.hpp"
 #include "video/camera.hpp"
+#include "video-opencv/settings.hpp"
 
 #include <QDialog>
 #include <QHBoxLayout>
@@ -89,7 +90,7 @@ struct Settings : opts
     value<int> resolution{ b, "force-resolution", 0 };
     value<double> deadzone_size{ b, "deadzone-size", 1. };
     value<double> deadzone_hardness{ b, "deadzone-hardness", 1.5 };
-    value<QString> posenet_file{ b, "posenet-file", "head-pose-0.4-big-int8.onnx" };
+    value<QString> posenet_file{ b, "posenet-file", "head-pose-0.4-small-f32.onnx" };
     value<bool> internal_filter_enabled{ b, "internal-filter-enabled", true };
     Settings();
 };
@@ -160,7 +161,7 @@ private:
 
     QMutex mtx_ = {}; // Protects the pose
     std::optional<QuatPose> last_pose_ = {};
-    Affine last_pose_affine_ = {};
+    std::optional<Affine> last_pose_affine_ = {};
 
     Preview preview_;
     std::unique_ptr<cv_video_widget> video_widget_;
@@ -179,11 +180,10 @@ public:
     void set_buttons_visible(bool x) override;
 
 private:
-    void make_fps_combobox();
-    void make_resolution_combobox();
 
     Ui::Form ui_;
     Settings settings_;
+    dshow_camera_settings cs_;
     // Calibration code mostly taken from point tracker
     QTimer calib_timer_;
     TranslationCalibrator trans_calib_;
@@ -201,7 +201,6 @@ private Q_SLOTS:
     void startstop_trans_calib(bool start);
     void trans_calib_step();
     void status_poll();
-    void onSelectPoseNetFile();
 };
 
 class NeuralNetMetadata : public Metadata

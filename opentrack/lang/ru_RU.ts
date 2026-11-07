@@ -13,6 +13,33 @@
     </message>
 </context>
 <context>
+    <name>UpdateDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Software update released</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Current version:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TextLabel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Released version:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t remind me again about this version</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>main_window</name>
     <message>
         <source>Create new empty config</source>
@@ -87,38 +114,6 @@ Exiting now.</source>
         <translation> :: </translation>
     </message>
     <message>
-        <source>Raw tracker data</source>
-        <translation>Исходные данные</translation>
-    </message>
-    <message>
-        <source>Z</source>
-        <translation>Z</translation>
-    </message>
-    <message>
-        <source>Pitch</source>
-        <translation>Pitch</translation>
-    </message>
-    <message>
-        <source>Y</source>
-        <translation>Y</translation>
-    </message>
-    <message>
-        <source>X</source>
-        <translation>X</translation>
-    </message>
-    <message>
-        <source>Roll</source>
-        <translation>Roll</translation>
-    </message>
-    <message>
-        <source>Yaw</source>
-        <translation>Yaw</translation>
-    </message>
-    <message>
-        <source>Game data</source>
-        <translation>Игровые данные</translation>
-    </message>
-    <message>
         <source>Profile</source>
         <translation>Профиль</translation>
     </message>
@@ -139,20 +134,8 @@ Exiting now.</source>
         <translation>Остановить</translation>
     </message>
     <message>
-        <source>Input</source>
-        <translation>Источник данных</translation>
-    </message>
-    <message>
-        <source>🔨</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>Output</source>
         <translation>Выходной интерфейс</translation>
-    </message>
-    <message>
-        <source>Filter</source>
-        <translation>Фильтрация/сглаживание</translation>
     </message>
     <message>
         <source>Running as root is bad</source>
@@ -176,6 +159,10 @@ Exiting now.</source>
     </message>
     <message>
         <source>Don&apos;t run as root to remove these annoying messages.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

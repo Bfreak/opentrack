@@ -8,6 +8,7 @@
 #pragma once
 
 #include "video/camera.hpp"
+#include "settings.hpp"
 #include <optional>
 #include <opencv2/videoio.hpp>
 
@@ -43,13 +44,17 @@ static constexpr int video_capture_backend =
     bool is_open() override;
     std::tuple<const frame&, bool> get_frame() override;
     bool show_dialog() override;
+    void set_exposure(exposure_preset e);
 
     bool get_frame_();
+
+    dshow_camera_settings s;
 
     std::optional<cv::VideoCapture> cap;
     cv::Mat mat;
     frame frame_;
-    int idx = -1;
+    int idx = -1, writes = 0;
+    exposure_preset exposure = exposure_preset::ignored;
 };
 
 } // ns opencv_camera_impl

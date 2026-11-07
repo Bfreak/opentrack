@@ -2,6 +2,7 @@
 #include "compat/sleep.hpp"
 #include "video-property-page.hpp"
 #include <opencv2/core/utils/logger.hpp>
+#include <QDebug>
 
 namespace opencv_camera_impl {
 
@@ -31,6 +32,47 @@ bool cam::is_open()
     return !!cap;
 }
 
+void cam::set_exposure(exposure_preset e)
+{
+    switch (e)
+    {
+        using enum exposure_preset;
+        case near: cap->set(cv::CAP_PROP_EXPOSURE, -6); qDebug() << "near"; break;
+        case medium: cap->set(cv::CAP_PROP_EXPOSURE, -5); qDebug() << "medium"; break;
+        case far: cap->set(cv::CAP_PROP_EXPOSURE, -4); qDebug() << "far"; break;
+        default: break;
+    }
+
+    switch (e)
+    {
+    using enum exposure_preset;
+    default:
+        break;
+    case near:
+    case medium:
+    case far: {
+        constexpr struct {
+            int prop, value;
+        } props[] = {
+            { cv::CAP_PROP_AUTO_EXPOSURE,   0 },
+            { cv::CAP_PROP_BRIGHTNESS,      0 },
+            { cv::CAP_PROP_SHARPNESS,       3 },
+            { cv::CAP_PROP_BRIGHTNESS,      0 },
+            { cv::CAP_PROP_SHARPNESS,       3 },
+            { cv::CAP_PROP_CONTRAST,       32 },
+            { cv::CAP_PROP_HUE,             0 },
+            { cv::CAP_PROP_SATURATION,      0 },
+            { cv::CAP_PROP_SHARPNESS,       3 },
+            { cv::CAP_PROP_GAMMA,         100 },
+            { cv::CAP_PROP_BACKLIGHT,       1 },
+            { cv::CAP_PROP_GAIN,            0 },
+        };
+        for (const auto [prop, value] : props)
+            cap->set(prop, value);
+    }
+    }
+}
+
 bool cam::start(info& args)
 {
     stop();
@@ -47,6 +89,9 @@ bool cam::start(info& args)
 
     if (args.use_mjpeg)
         cap->set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
+
+    set_exposure(*s.exposure);
+    writes = 3;
 
     if (!cap->isOpened())
         goto fail;
@@ -65,6 +110,19 @@ bool cam::get_frame_()
 {
     if (!is_open())
         return false;
+
+    auto e = *s.exposure;
+    if (e != exposure)
+    {
+        writes = 2;
+        exposure = e;
+        set_exposure(e);
+    }
+    else if (writes > 0)
+    {
+        writes--;
+        set_exposure(e);
+    }
 
     for (unsigned i = 0; i < 10; i++)
     {

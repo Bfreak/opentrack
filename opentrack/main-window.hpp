@@ -35,6 +35,8 @@
 
 #include "ui_main-window.h"
 
+class update_query;
+
 class main_window final : public QMainWindow, private State
 {
     Q_DECLARE_TR_FUNCTIONS(main_window)
@@ -84,6 +86,8 @@ class main_window final : public QMainWindow, private State
     qt_signal<void> toggle_tracker { this, &main_window::toggle_tracker_, Qt::QueuedConnection };
     qt_signal<void> restart_tracker { this, &main_window::restart_tracker_, Qt::QueuedConnection };
 
+    std::unique_ptr<update_query> updater;
+
 public:
     void init_dylibs();
     void init_tray_menu();
@@ -118,6 +122,9 @@ public:
     void show_pose();
     void show_pose_(const double* mapped, const double* raw);
     void set_title(const QString& game_title = QString());
+#ifdef UI_COMPACT_VIDEO_FEED
+    void toggle_video_preview(bool value);
+#endif
 
     void start_tracker_();
     void stop_tracker_();

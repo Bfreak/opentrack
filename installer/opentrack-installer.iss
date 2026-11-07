@@ -2,17 +2,17 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #include "../build/opentrack-version.hxx"
-#define MyAppName "opentrack"
+#define MyAppName "TrackHat opentrack v3"
 #define MyAppVersion OPENTRACK_VERSION
-#define MyAppPublisher "opentrack"
-#define MyAppURL "http://github.com/opentrack/opentrack"
+#define MyAppPublisher "TrackHat"
+#define MyAppURL "https://www.trackhat.org/trackhat-opentrack"
 #define MyAppExeName "opentrack.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{63F53541-A29E-4B53-825A-9B6F876A2BD6}
+AppId={{B12AD35E-8D24-4BC3-8F9B-72A19BD41326}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -52,6 +52,6 @@ Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Flags: nowait postinstall skipifsilent; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; 
+Filename: "{app}\{#MyAppExeName}"; Flags: nowait postinstall skipifsilent; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}";
 
 [Code]

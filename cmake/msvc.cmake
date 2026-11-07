@@ -21,6 +21,7 @@ setq(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER
 #add_compile_options(-Qvec-report:2)
 #add_compile_options(-d2cgsummary)
 add_definitions(-D_HAS_EXCEPTIONS=0)
+add_definitions(-D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 
 if(DEFINED CMAKE_TOOLCHAIN_FILE)
     # ignore cmake warning: Manually-specified variable not used by the project

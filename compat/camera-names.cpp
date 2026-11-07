@@ -58,7 +58,7 @@ static QString prop_to_qstring(IPropertyBag* pPropBag, const wchar_t* name)
     return ret;
 }
 
-static QString device_path_from_qstring(const QString& str)
+[[maybe_unused]] static QString device_path_from_qstring(const QString& str)
 {
     // language=RegExp prefix=R"/( suffix=)/"
     static const QRegularExpression regexp{R"/(#vid_([0-9a-f]{4})&pid_([0-9a-f]{4})&mi_([0-9a-f]{2})#([^#]+))/",
@@ -104,9 +104,8 @@ std::vector<std::tuple<QString, int>> get_camera_names()
             if (hr == S_OK) {
                 // To retrieve the filter's friendly name, do the following:
                 QString str = prop_to_qstring(pPropBag.Get(), L"FriendlyName");
-                QString path = device_path_from_qstring(prop_to_qstring(pPropBag.Get(), L"DevicePath"));
-                if (!path.isNull())
-                    str += QStringLiteral(" [%1]").arg(path);
+                // TrackHat: the " [device path]" suffix is intentionally not appended,
+                // matching previous TrackHat builds (camera is looked up by plain name).
                 ret.push_back({str, (int)ret.size()});
             }
         }
