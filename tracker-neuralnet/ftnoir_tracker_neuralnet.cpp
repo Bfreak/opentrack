@@ -55,7 +55,7 @@ using vec2 = vec<2>;
 using vec3 = vec<3>;
 using mat33 = mat<3, 3>;
 
-#if _MSC_VER
+#if defined(_WIN32)
 std::wstring convert(const QString& s)
 {
     return s.toStdWString();
