@@ -2,9 +2,11 @@
 #include "options/value.hpp"
 using namespace options;
 
+// Numeric values are stored in user profiles ("exposure-preset"): do not reorder.
+// Enumerators avoid the names `near`/`far`, which <windows.h> defines as macros.
 enum class exposure_preset : int {
-    near, far, ignored, medium,
-    DEFAULT = medium,
+    range_near, range_far, ignored, range_medium,
+    DEFAULT = range_medium,
 };
 
 struct dshow_camera_settings final {

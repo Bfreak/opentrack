@@ -79,7 +79,7 @@ static const std::array<resolution_tuple, 10> resolution_choices = { {
 
 struct Settings : opts
 {
-    value<int> offset_fwd{ b, "offset-fwd", -100 }, // Millimeters
+    value<int> offset_fwd{ b, "offset-fwd", 200 }, // Millimeters (TrackHat default; upstream 2026 uses -100)
         offset_up{ b, "offset-up", 0 }, offset_right{ b, "offset-right", 0 };
     value<QString> camera_name{ b, "camera-name", "" };
     value<int> fov{ b, "field-of-view", 56 };
@@ -88,7 +88,7 @@ struct Settings : opts
     value<double> roi_filter_alpha{ b, "roi-filter-alpha", 1. };
     value<double> roi_zoom{ b, "roi-zoom", 1. };
     value<bool> use_mjpeg{ b, "use-mjpeg", false };
-    value<int> num_threads{ b, "num-threads", 2 };
+    value<int> num_threads{ b, "num-threads", 1 }; // TrackHat default; upstream 2026 uses 2
     value<int> resolution{ b, "force-resolution", 0 };
     value<double> deadzone_size{ b, "deadzone-size", 1. };
     value<double> deadzone_hardness{ b, "deadzone-hardness", 1.5 };

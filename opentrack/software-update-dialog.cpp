@@ -1,6 +1,8 @@
 #include "software-update-dialog.hpp"
 #include "opentrack-org.hxx"
 
+#include <QRegularExpression>
+
 update_dialog::update_dialog(QWidget* parent, update_query& q, const QString& new_version)
     : QDialog(parent), q(q)
 {
@@ -23,11 +25,11 @@ void update_query::on_finished()
         return;
     }
     QString str(buf);
-    QRegExp re("SOFTWARE-UPDATE-V3: ([a-zA-Z0-9_.-+]+)");
-    int idx = re.indexIn(str);
-    if (idx != -1)
+    static const QRegularExpression re(QStringLiteral("SOFTWARE-UPDATE-V3: ([a-zA-Z0-9_.+-]+)"));
+    const QRegularExpressionMatch match = re.match(str);
+    if (match.hasMatch())
     {
-        str = re.cap(1);
+        str = match.captured(1);
         QSettings s(OPENTRACK_ORG);
         QString quiet_version = s.value("quiet-update-version").toString();
 

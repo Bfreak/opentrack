@@ -825,9 +825,9 @@ NeuralNetDialog::NeuralNetDialog() : trans_calib_(1, 2)
             QString label;
             exposure_preset preset;
         } presets[] = {
-            { tr("Near (1-3ft)"), exposure_preset::near },
-            { tr("Medium (3-6ft)"), exposure_preset::medium },
-            { tr("Far (6+ft)"), exposure_preset::far },
+            { tr("Near (1-3ft)"), exposure_preset::range_near },
+            { tr("Medium (3-6ft)"), exposure_preset::range_medium },
+            { tr("Far (6+ft)"), exposure_preset::range_far },
             { tr("Custom"), exposure_preset::ignored },
         };
 

@@ -37,9 +37,9 @@ void cam::set_exposure(exposure_preset e)
     switch (e)
     {
         using enum exposure_preset;
-        case near: cap->set(cv::CAP_PROP_EXPOSURE, -6); qDebug() << "near"; break;
-        case medium: cap->set(cv::CAP_PROP_EXPOSURE, -5); qDebug() << "medium"; break;
-        case far: cap->set(cv::CAP_PROP_EXPOSURE, -4); qDebug() << "far"; break;
+        case range_near: cap->set(cv::CAP_PROP_EXPOSURE, -6); qDebug() << "near"; break;
+        case range_medium: cap->set(cv::CAP_PROP_EXPOSURE, -5); qDebug() << "medium"; break;
+        case range_far: cap->set(cv::CAP_PROP_EXPOSURE, -4); qDebug() << "far"; break;
         default: break;
     }
 
@@ -48,9 +48,9 @@ void cam::set_exposure(exposure_preset e)
     using enum exposure_preset;
     default:
         break;
-    case near:
-    case medium:
-    case far: {
+    case range_near:
+    case range_medium:
+    case range_far: {
         constexpr struct {
             int prop, value;
         } props[] = {

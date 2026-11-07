@@ -42,56 +42,8 @@ Bitte nicht rollen oder die Position ändern.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Face Crop Options:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Smoothing Alpha</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Show</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Zoom</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Camera Configuration</source>
         <translation>Kamera-Konfiguration</translation>
-    </message>
-    <message>
-        <source>Diagonal FOV</source>
-        <translation>Diagonales Sichtfeld</translation>
-    </message>
-    <message>
-        <source>Camera name</source>
-        <translation>Kamera-Name</translation>
-    </message>
-    <message>
-        <source>Field of view. Needed to transform the pose to world coordinates.</source>
-        <translation>Sichtfeld. Benötigt, um die Pose in Welt-Koordinaten zu übersetzen.</translation>
-    </message>
-    <message>
-        <source>The requested resolution for cases where the camera delivers maximum frame rate only for a particular resolution. The image may still be downscaled to the internal resolution.</source>
-        <translation>Die angeforderte Auflösung für Fälle, in denen die Kamera die maximale Bildrate nur bei bestimmten Auflösungen ausgibt. Das Bild wird möglicherweise weiterhin herunterskaliert auf die interne Auflösung.</translation>
-    </message>
-    <message>
-        <source>Resolution</source>
-        <translation>Auflösung</translation>
-    </message>
-    <message>
-        <source>Requested video frame rate. Actual setting may not be supported by the camera.</source>
-        <translation>Angeforderte Bildrate. Die tatsächliche Einstellungen wird von der Kamera möglicherweise nicht unterstützt.</translation>
-    </message>
-    <message>
-        <source>Frames per second</source>
-        <translation>Bilder pro Sekunde</translation>
-    </message>
-    <message>
-        <source>MJPEG</source>
-        <translation>MJPEG</translation>
     </message>
     <message>
         <source>Camera settings</source>
@@ -122,24 +74,28 @@ Bitte nicht rollen oder die Position ändern.</translation>
         <translation>Zoom-Faktor der Gesichtsregion. Wird angewendet, bevor der Bildausschnitt zum Posen-Abschätzungsmodell gesendet wird. Der Sweet-Spot liegt nahe bei 1.</translation>
     </message>
     <message>
-        <source>Select the pose network. Changes take affect on the next tracker start</source>
-        <translation>Wählt das Pose-Netzwerk. Die Änderungen treten beim nächsten Start des Trackers inkraft</translation>
+        <source>ROI Zoom</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Select Pose Net ONNX</source>
-        <translation>Wähle Pose-Netzwerk ONNX</translation>
+        <source>ROI Smoothing Alpha</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;the pose net file&gt;</source>
-        <translation>&lt;die pose netzwerk datei&gt;</translation>
+        <source>Show Network Input</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Camera override</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exposure preset</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>neuralnet_tracker_ns::NeuralNetDialog</name>
-    <message>
-        <source>Default</source>
-        <translation>Standard</translation>
-    </message>
     <message>
         <source>Tracker Offline</source>
         <translation>Tracker offline</translation>
@@ -169,12 +125,20 @@ Bitte nicht rollen oder die Position ändern.</translation>
         <translation>Kalibrierung starten</translation>
     </message>
     <message>
-        <source>Select Pose Net ONNX</source>
-        <translation>Wähle Pose-Netzwerk ONNX</translation>
+        <source>Near (1-3ft)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>ONNX Files (*.onnx)</source>
-        <translation>ONNX-Dateien (*.onnx)</translation>
+        <source>Medium (3-6ft)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Far (6+ft)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Custom</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

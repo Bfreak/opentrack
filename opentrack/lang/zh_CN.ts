@@ -13,39 +13,34 @@
     </message>
 </context>
 <context>
+    <name>UpdateDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Software update released</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Current version:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TextLabel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Released version:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t remind me again about this version</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>main_window</name>
-    <message>
-        <source>Raw tracker data</source>
-        <translation>跟踪原始数据</translation>
-    </message>
-    <message>
-        <source>Z</source>
-        <translation>Z轴</translation>
-    </message>
-    <message>
-        <source>Pitch</source>
-        <translation>俯仰</translation>
-    </message>
-    <message>
-        <source>Y</source>
-        <translation>Y轴</translation>
-    </message>
-    <message>
-        <source>X</source>
-        <translation>X轴</translation>
-    </message>
-    <message>
-        <source>Roll</source>
-        <translation>滚转</translation>
-    </message>
-    <message>
-        <source>Yaw</source>
-        <translation>偏航</translation>
-    </message>
-    <message>
-        <source>Game data</source>
-        <translation>游戏接收数据</translation>
-    </message>
     <message>
         <source>Profile</source>
         <translation>配置文件</translation>
@@ -71,20 +66,8 @@
         <translation>停止</translation>
     </message>
     <message>
-        <source>Input</source>
-        <translation>输入设备</translation>
-    </message>
-    <message>
-        <source>🔨</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Output</source>
         <translation>输出协议</translation>
-    </message>
-    <message>
-        <source>Filter</source>
-        <translation>过滤器</translation>
     </message>
     <message>
         <source>Running as root is bad</source>
@@ -176,6 +159,10 @@ Exiting now.</source>
     </message>
     <message>
         <source> :: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
