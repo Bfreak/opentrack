@@ -87,12 +87,13 @@ void spline_widget::drawBackground()
 {
     QPainter painter(&background_img);
 
+    widget_bg_color = palette().window().color();
     painter.fillRect(rect(), widget_bg_color);
 
     {
-        QColor bg_color(112, 154, 209);
+        QColor bg_color = plot_color;
         if (!isEnabled() && !preview_only)
-            bg_color = QColor(176,176,180);
+            bg_color = plot_disabled_color;
         painter.fillRect(pixel_bounds, bg_color);
     }
 
@@ -102,10 +103,10 @@ void spline_widget::drawBackground()
     painter.setFont(font);
     const QFontMetricsF metrics(font);
 
-    QColor color__(176, 190, 209, 127);
+    QColor color__ = grid_color;
 
     if (!isEnabled())
-        color__ = QColor(70, 90, 100, 96);
+        color__ = grid_disabled_color;
 
     const QPen pen(color__, 1, Qt::SolidLine, Qt::FlatCap);
 

@@ -28,6 +28,9 @@ using namespace options;
 #include <QString>
 #include <QOperatingSystemVersion>
 #include <QMutex>
+#include <QPalette>
+#include <QRegularExpression>
+#include <QStyle>
 
 #include <QDebug>
 
@@ -106,6 +109,59 @@ static void set_qt_style()
             }
     }
 #endif
+}
+
+// Trackhat: themes are a palette + Qt stylesheet in <modules>/themes/<name>.qss.
+// Palette entries are declared in the file as "@role = #rrggbb" (e.g. "@window = #101014").
+// Prototype stage: only applied when OPENTRACK_THEME=<name> is set.
+static void apply_trackhat_theme()
+{
+    const QString name = qEnvironmentVariable("OPENTRACK_THEME");
+    if (name.isEmpty())
+        return;
+    const QString dir = OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH "themes/";
+    QFile f(dir + name + ".qss");
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "theme: can't open" << f.fileName();
+        return;
+    }
+    QString qss = QString::fromUtf8(f.readAll());
+
+    if (QStyle* s = QStyleFactory::create("fusion"))
+        QApplication::setStyle(s);
+
+    static const struct { const char* name; QPalette::ColorRole role; } roles[] = {
+        { "window", QPalette::Window }, { "windowtext", QPalette::WindowText }, { "base", QPalette::Base },
+        { "alternatebase", QPalette::AlternateBase }, { "text", QPalette::Text }, { "button", QPalette::Button },
+        { "buttontext", QPalette::ButtonText }, { "highlight", QPalette::Highlight },
+        { "highlightedtext", QPalette::HighlightedText }, { "tooltipbase", QPalette::ToolTipBase },
+        { "tooltiptext", QPalette::ToolTipText }, { "light", QPalette::Light }, { "midlight", QPalette::Midlight },
+        { "mid", QPalette::Mid }, { "dark", QPalette::Dark }, { "shadow", QPalette::Shadow },
+        { "link", QPalette::Link }, { "brighttext", QPalette::BrightText },
+        { "placeholdertext", QPalette::PlaceholderText },
+    };
+    QPalette pal = QApplication::style()->standardPalette();
+    static const QRegularExpression re(QStringLiteral(R"(@(\w+)\s*=\s*(#[0-9a-fA-F]{6,8}))"));
+    for (auto it = re.globalMatch(qss); it.hasNext();)
+    {
+        const auto m = it.next();
+        const QString key = m.captured(1).toLower();
+        const QColor c(m.captured(2));
+        if (key == "disabledtext")
+        {
+            for (auto r : { QPalette::Text, QPalette::WindowText, QPalette::ButtonText })
+                pal.setColor(QPalette::Disabled, r, c);
+            continue;
+        }
+        for (const auto& r : roles)
+            if (key == QLatin1String(r.name))
+                pal.setColor(QPalette::All, r.role, c);
+    }
+    QApplication::setPalette(pal);
+    qss.replace(QStringLiteral("$THEME_DIR"), dir);
+    qApp->setStyleSheet(qss);
+    opentrack_using_dark_theme = true;
 }
 
 #include <string>
@@ -321,6 +377,7 @@ int otr_main(int argc, char** argv, std::function<std::unique_ptr<QWidget>()> co
     QDir::setCurrent(OPENTRACK_BASE_PATH);
 
     set_qt_style();
+    apply_trackhat_theme();
     QTranslator t;
 
     {

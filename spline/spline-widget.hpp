@@ -34,6 +34,11 @@ class OTR_SPLINE_EXPORT spline_widget final : public QWidget, public screen_dpi_
     Q_PROPERTY(bool is_preview_only READ is_preview_only WRITE set_preview_only)
     Q_PROPERTY(int x_step READ x_step WRITE set_x_step)
     Q_PROPERTY(int y_step READ y_step WRITE set_y_step)
+    // Trackhat: themeable plot colours (set from the stylesheet with qproperty-plotColor etc.)
+    Q_PROPERTY(QColor plotColor MEMBER plot_color)
+    Q_PROPERTY(QColor plotDisabledColor MEMBER plot_disabled_color)
+    Q_PROPERTY(QColor gridColor MEMBER grid_color)
+    Q_PROPERTY(QColor gridDisabledColor MEMBER grid_disabled_color)
 
 public:
     explicit spline_widget(QWidget *parent = nullptr);
@@ -94,6 +99,8 @@ private:
     QPixmap spline_img;
     QColor spline_color;
     QColor widget_bg_color = palette().window().color();
+    QColor plot_color { 112, 154, 209 }, plot_disabled_color { 176, 176, 180 };
+    QColor grid_color { 176, 190, 209, 127 }, grid_disabled_color { 70, 90, 100, 96 };
 
     // bounds of the rectangle user can interact with
     QRect pixel_bounds;

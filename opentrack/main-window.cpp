@@ -75,6 +75,29 @@ main_window::main_window() : State(OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH)
     if (qEnvironmentVariableIsSet("OPENTRACK_HEAD_TEST_SNAPSHOT"))
         QTimer::singleShot(300, this, &main_window::show_head_test_window);
 
+    // Trackhat: UI screenshot mode for theme work (development aid):
+    // OPENTRACK_UI_SNAPSHOT=<dir> saves the main, Options, Mapping and test windows, then quits.
+    if (const QString dir = qEnvironmentVariable("OPENTRACK_UI_SNAPSHOT"); !dir.isEmpty())
+    {
+        QTimer::singleShot(500, this, [this] {
+            show_options_dialog(true);
+            show_mapping_window();
+            show_head_test_window();
+        });
+        QTimer::singleShot(3500, this, [this, dir] {
+            QDir().mkpath(dir);
+            auto save = [&](QWidget* w, const char* name) {
+                if (w)
+                    w->grab().save(QDir(dir).filePath(QString::fromLatin1(name) + ".png"));
+            };
+            save(this, "main");
+            save(options_widget.get(), "options");
+            save(mapping_widget.get(), "mapping");
+            save(head_test_widget.get(), "headtest");
+            QApplication::exit(0);
+        });
+    }
+
     connect(&pose_update_timer, &QTimer::timeout,
             this, &main_window::show_pose, Qt::DirectConnection);
     connect(&det_timer, &QTimer::timeout,
