@@ -16,12 +16,14 @@ The owner can't compile, so builds/tests are done by Claude.
   restored from the handoff bundle. Fork: https://github.com/Bfreak/opentrack (remote `fork`);
   branch `trackhat-2026.1` and tag `opentrack-2026.1.0` pushed. `origin` is still upstream `opentrack/opentrack`.
 - **GitHub Actions MSVC build** (2026-11-08): `.github/workflows/trackhat-windows.yml` runs on pushes to `trackhat-*`
-  branches/tags, PRs and manually. MSVC 2022 + Qt 6.8.3 (msvc2022_64) + static OpenCV 4.10.0 (cvpkg/opencv-action)
-  + ORT 1.17.3 + oscpack (built with `cl`) + `opentrack-depends` (vJoy/FSUIPC/SimConnect SDKs).
+  branches/tags, PRs and manually. MSVC 2022 + Qt 6.8.3 (msvc2022_64) + static OpenCV 4.10.0
+  (built and cached in the workflow, IPP off) + ORT 1.17.3 (download retried, cached) + oscpack (built with `cl`) + `opentrack-depends` (vJoy/FSUIPC/SimConnect SDKs).
   Outputs two artifacts: Inno Setup installer (`installer/opentrack-installer.iss`, ~85 MB) and a portable zip.
   Bundles the MSVC runtime DLLs app-locally (no VC++ redist install needed) and the Qt TLS/imageformats/styles plugins.
   Upstream's generic `cmake.yml` is now manual-only (it doesn't build the Trackhat variant and failed on every push).
-  First green run: https://github.com/Bfreak/opentrack/actions/runs/42475001676
+  Latest green run: https://github.com/Bfreak/opentrack/actions/runs/42476892319 (installer
+  `opentrack-2026.1.0-97-g0554956c-win32-setup.exe`, 86 MB). Installer is unsigned, so expect a SmartScreen warning.
+  Earlier runs failed on flaky GitHub release downloads (Ninja, ORT), which is why nothing is downloaded from release pages uncached.
 
 ## Blocked / pending
 1. **Owner testing of the CI installer on real Windows with a real sensor**: camera detection, exposure presets,
