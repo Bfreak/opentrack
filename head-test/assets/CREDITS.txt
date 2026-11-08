@@ -1,0 +1,15 @@
+Head-tracking test scene assets. All from Poly Haven (https://polyhaven.com), licensed CC0 1.0.
+
+Sky: kloofendal_48d_partly_cloudy_puresky  https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
+Sky: zwartkops_start_afternoon  https://polyhaven.com/a/zwartkops_start_afternoon
+Sky: mud_road  https://polyhaven.com/a/mud_road
+Ground texture: aerial_grass_rock  https://polyhaven.com/a/aerial_grass_rock
+Ground texture: brown_mud_leaves_01  https://polyhaven.com/a/brown_mud_leaves_01
+Model: bolt_action_rifle_7_62  https://polyhaven.com/a/bolt_action_rifle_7_62
+Model: wooden_military_crate  https://polyhaven.com/a/wooden_military_crate
+Model: ammo_box  https://polyhaven.com/a/ammo_box
+Model: metal_jerrycan_green  https://polyhaven.com/a/metal_jerrycan_green
+Model: concrete_road_barrier  https://polyhaven.com/a/concrete_road_barrier
+Model: dead_tree_trunk  https://polyhaven.com/a/dead_tree_trunk
+Model: old_tyre  https://polyhaven.com/a/old_tyre
+Model: stick_grenade  https://polyhaven.com/a/stick_grenade

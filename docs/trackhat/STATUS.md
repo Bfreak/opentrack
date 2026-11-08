@@ -25,6 +25,11 @@ The owner can't compile, so builds/tests are done by Claude.
   `opentrack-2026.1.0-97-g0554956c-win32-setup.exe`, 86 MB). Installer is unsigned, so expect a SmartScreen warning.
   Earlier runs failed on flaky GitHub release downloads (Ninja, ORT), which is why nothing is downloaded from release pages uncached.
 
+- **Head-tracking test window** (2026-11-08, branch `trackhat-head-test`): "Test head tracking" button opens a
+  3D Cockpit / Race car / Soldier view driven by the mapped pose. See `HEAD-TEST.md`. Built and checked locally
+  with screenshots of every scene from six head poses. **Not yet tried with live tracking.**
+- **Local Windows build** on the owner's PC (2026-11-08): `scripts/windows-local/build.bat`, deps in `../deps`. See `WINDOWS-LOCAL-BUILD.md`.
+
 ## Blocked / pending
 1. **Owner testing of the CI installer on real Windows with a real sensor**: camera detection, exposure presets,
    tracking, update popup. Nothing from the MSVC build has been run yet, not even launched.

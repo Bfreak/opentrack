@@ -19,6 +19,7 @@ function(otr_init_variant)
         "x-plane-plugin"
         "csv"
         "pose-widget"
+        "head-test"
         "spline"
         "qxt-mini"
         "macosx"

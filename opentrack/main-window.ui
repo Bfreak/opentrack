@@ -345,6 +345,22 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QPushButton" name="btnHeadTest">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Try your head tracking in a 3D cockpit, race car or soldier view</string>
+         </property>
+         <property name="text">
+          <string>Test head tracking</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -452,6 +468,7 @@
   <tabstop>btnStopTracker</tabstop>
   <tabstop>btnShortcuts</tabstop>
   <tabstop>btnEditCurves</tabstop>
+  <tabstop>btnHeadTest</tabstop>
   <tabstop>iconcomboProtocol</tabstop>
   <tabstop>btnShowServerControls</tabstop>
   <tabstop>profile_button</tabstop>

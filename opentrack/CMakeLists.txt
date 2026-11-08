@@ -25,6 +25,7 @@ target_link_libraries(${self} PRIVATE
     opentrack-migration
     opentrack-spline
     opentrack-pose-widget
+    opentrack-head-test
     opentrack-version
 )
 

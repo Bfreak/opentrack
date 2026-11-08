@@ -43,11 +43,18 @@ and hand back something runnable. Prefer finished, tested artifacts over explana
 - The MSVC build and Inno Setup installer from CI (`.github/workflows/trackhat-windows.yml`) compile and package,
   but haven't been launched on real Windows yet.
 
+## Building on this PC
+- `scripts/windows-local/build.bat` builds and installs to `../build-local/install` (deps in `../deps`,
+  see `docs/trackhat/WINDOWS-LOCAL-BUILD.md`). Use it to iterate; use CI for what users get.
+- Head-tracking test window: `docs/trackhat/HEAD-TEST.md`. To check scenes visually, run with
+  `OPENTRACK_HEAD_TEST_SNAPSHOT=<dir>` and look at the PNGs.
+
 ## Windows builds now come from CI
 - Push to `fork` (https://github.com/Bfreak/opentrack), branch `trackhat-2026.1`. The workflow
   `Trackhat Windows (MSVC)` uploads the installer and a portable zip as artifacts
   (`gh run list -R Bfreak/opentrack`, `gh run download <id> -R Bfreak/opentrack`).
-- This machine is the owner's Windows 11 PC. It has `gh` signed in as `Bfreak`, CMake and Ninja, but no MSVC (`cl`), Qt or OpenCV.
+- This machine is the owner's Windows 11 PC. It has `gh` signed in as `Bfreak`, VS 2022 Build Tools
+  (MSVC 14.44), an RTX 3090, and the local deps described above.
 
 ## Conventions
 - Commit messages: imperative, scoped like upstream (`tracker-neuralnet: ...`, `video/opencv: ...`).

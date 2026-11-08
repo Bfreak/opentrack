@@ -161,6 +161,14 @@ Exiting now.</source>
         <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Try your head tracking in a 3D cockpit, race car or soldier view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Test head tracking</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>new_file_dialog</name>

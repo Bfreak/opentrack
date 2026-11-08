@@ -22,6 +22,7 @@
 #include "compat/sysexits.hpp"
 #include "opentrack/defs.hpp"
 #include "software-update-dialog.hpp"
+#include "head-test/head-test-window.hpp"
 
 #include <cstring>
 #include <utility>
@@ -69,6 +70,10 @@ main_window::main_window() : State(OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH)
     ensure_tray();
 
     ui.pose_display->set_grid_background(opentrack_using_dark_theme);
+
+    // Trackhat: screenshot mode for the head tracking test window (development aid)
+    if (qEnvironmentVariableIsSet("OPENTRACK_HEAD_TEST_SNAPSHOT"))
+        QTimer::singleShot(300, this, &main_window::show_head_test_window);
 
     connect(&pose_update_timer, &QTimer::timeout,
             this, &main_window::show_pose, Qt::DirectConnection);
@@ -272,6 +277,7 @@ void main_window::init_buttons()
 {
     update_button_state(false, false);
     connect(ui.btnEditCurves, &QPushButton::clicked, this, &main_window::show_mapping_window);
+    connect(ui.btnHeadTest, &QPushButton::clicked, this, &main_window::show_head_test_window);
     connect(ui.btnShortcuts, &QPushButton::clicked, this, [this] { show_options_dialog(true); });
 #ifndef UI_NO_TRACKER_SETTINGS_BUTTON
     connect(ui.btnShowEngineControls, &QPushButton::clicked, this, &main_window::show_tracker_settings);
@@ -832,6 +838,21 @@ void main_window::show_options_dialog(bool show)
 void main_window::show_mapping_window()
 {
     mk_window(mapping_widget, true, pose);
+}
+
+void main_window::show_head_test_window()
+{
+    if (!head_test_widget)
+    {
+        head_test_widget = std::make_unique<head_test_window>([this](double* out) {
+            if (!work)
+                return false;
+            double raw[6];
+            work->pipeline_.raw_and_mapped_pose(out, raw);
+            return true;
+        });
+    }
+    head_test_widget->show_beside(this);
 }
 
 void main_window::exit(int status)

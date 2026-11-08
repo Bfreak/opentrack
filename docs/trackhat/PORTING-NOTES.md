@@ -28,6 +28,8 @@ The branch was merged (real 3-way merge, history preserved) into the 2026.1.0 re
 - Software-update checker against trackhat.org (ported from `QRegExp` to `QRegularExpression`)
 - OSC output (needs `-DSDK_OSCPACK=<path>`; identical to upstream)
 - Installer script changes
+- Head-tracking test window (`head-test/`, new in the 2026.1 port): 3D cockpit / race car / soldier scenes
+  driven by the mapped pose, opened from the main window. See `docs/trackhat/HEAD-TEST.md`.
 - CI: `.github/workflows/trackhat-windows.yml` (MSVC build, installer, portable zip); upstream's
   `cmake.yml` made manual-only
 
