@@ -65,13 +65,36 @@ jobs:
         target: desktop
         cache: true
 
-    - name: Install OpenCV (static)
-      uses: cvpkg/opencv-action@main
+    # Static OpenCV, installed where sdk-paths-runneradmin@MSVC-windows.cmake looks for it.
+    - name: Cache OpenCV
+      id: cv-cache
+      uses: actions/cache@v4
       with:
-        opencv_tag: ${{ env.opencv_tag }}
-        BUILD_LIST: 'core,imgcodecs,imgproc,video,videoio,calib3d,highgui'
-        BUILD_SHARED_LIBS: 'OFF'
-        BUILD_WITH_STATIC_CRT: 'OFF'
+        path: artifacts/opencv/${{ env.opencv_tag }}/windows-x64
+        key: opencv-${{ env.opencv_tag }}-static-md-msvc2022-v1
+
+    - name: Build OpenCV (static)
+      if: steps.cv-cache.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: |
+        $src = "$env:RUNNER_TEMP/opencv"
+        for ($i = 1; $i -le 5; $i++) {
+          git clone -q --depth 1 -b $env:opencv_tag https://github.com/opencv/opencv.git $src
+          if ($LASTEXITCODE -eq 0) { break }
+          Remove-Item -Recurse -Force $src -ErrorAction SilentlyContinue
+          if ($i -eq 5) { exit 1 }; Start-Sleep 20
+        }
+        cmake -G Ninja -S $src -B "$env:RUNNER_TEMP/opencv-build" `
+          -DCMAKE_BUILD_TYPE=Release `
+          "-DCMAKE_INSTALL_PREFIX=$env:GITHUB_WORKSPACE/artifacts/opencv/$env:opencv_tag/windows-x64" `
+          -DBUILD_LIST=core,imgcodecs,imgproc,video,videoio,calib3d,highgui `
+          -DBUILD_SHARED_LIBS=OFF -DBUILD_WITH_STATIC_CRT=OFF `
+          -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_opencv_apps=OFF `
+          -DBUILD_JAVA=OFF -DBUILD_opencv_python3=OFF -DWITH_FFMPEG=OFF -DWITH_OPENCL=OFF `
+          -DWITH_DSHOW=ON -DWITH_IPP=OFF -DWITH_ADE=OFF -DWITH_PROTOBUF=OFF
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        cmake --build "$env:RUNNER_TEMP/opencv-build" --target install
+        if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
     - name: Cache ONNX Runtime
       id: ort-cache
