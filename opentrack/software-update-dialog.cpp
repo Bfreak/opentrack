@@ -2,6 +2,50 @@
 #include "opentrack-org.hxx"
 
 #include <QRegularExpression>
+#include <QVersionNumber>
+
+namespace {
+
+// Trackhat version strings look like "trackhat-opentrack-3.3", optionally with a pre-release
+// suffix ("-rc1", "-beta2") and/or a git-describe suffix ("-12-gabcdef12").
+struct th_version
+{
+    QVersionNumber number;
+    bool prerelease = false;
+    bool valid = false;
+};
+
+th_version parse_th_version(const QString& s)
+{
+    static const QRegularExpression re(QStringLiteral(R"(^trackhat-opentrack-(\d+(?:\.\d+)*)(-(?:rc|beta|alpha)\d*)?)"));
+    th_version v;
+    const QRegularExpressionMatch m = re.match(s);
+    if (m.hasMatch())
+    {
+        v.number = QVersionNumber::fromString(m.captured(1));
+        v.prerelease = m.hasCaptured(2);
+        v.valid = !v.number.isNull();
+    }
+    return v;
+}
+
+// Only offer an update when the advertised release is newer than what's running.
+// The old string-inequality check nagged on every build that wasn't byte-identical to the
+// advertised version (e.g. a newer build while the site still says 3.2).
+bool is_newer_release(const QString& advertised, const QString& running)
+{
+    const th_version adv = parse_th_version(advertised), cur = parse_th_version(running);
+    if (!adv.valid)
+        return false;  // unknown scheme on the website; don't nag
+    if (!cur.valid)
+        return false;  // untagged developer build
+    const int c = QVersionNumber::compare(adv.number, cur.number);
+    if (c != 0)
+        return c > 0;
+    return cur.prerelease && !adv.prerelease;  // e.g. running 3.3-rc1, site says 3.3
+}
+
+} // namespace
 
 update_dialog::update_dialog(QWidget* parent, update_query& q, const QString& new_version)
     : QDialog(parent), q(q)
@@ -33,7 +77,7 @@ void update_query::on_finished()
         QSettings s(OPENTRACK_ORG);
         QString quiet_version = s.value("quiet-update-version").toString();
 
-        if (!str.isEmpty() && str != opentrack_version && str != quiet_version)
+        if (!str.isEmpty() && str != quiet_version && is_newer_release(str, QString::fromUtf8(opentrack_version)))
         {
             qDebug() << "updater: new version" << str;
             update_dialog dlg(qobject_cast<QWidget*>(parent()), *this, str);

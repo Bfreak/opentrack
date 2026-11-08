@@ -3,7 +3,9 @@ include(GetGitRevisionDescription)
 
 find_package(Git QUIET)
 if(GIT_FOUND)
-    git_describe(OPENTRACK_COMMIT --tags --always)
+    # Trackhat: version comes from trackhat-opentrack-X.Y tags (compared by the trackhat.org update check),
+    # not from upstream's opentrack-YYYY.N tags.
+    git_describe(OPENTRACK_COMMIT --tags --always --match "trackhat-opentrack-*")
 endif()
 
 file(WRITE ${CMAKE_BINARY_DIR}/opentrack-version.hxx "#define OPENTRACK_VERSION \"${OPENTRACK_COMMIT}\"")
