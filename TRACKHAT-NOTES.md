@@ -28,6 +28,8 @@ The branch was merged (real 3-way merge, history preserved) into the 2026.1.0 re
 - Software-update checker against trackhat.org (ported from `QRegExp` to `QRegularExpression`)
 - OSC output (needs `-DSDK_OSCPACK=<path>`; identical to upstream)
 - Installer script changes
+- CI: `.github/workflows/trackhat-windows.yml` (MSVC build, installer, portable zip); upstream's
+  `cmake.yml` made manual-only
 
 ## Deliberate differences from the 2023-24 TrackHat code
 
@@ -67,7 +69,8 @@ OpenTrack refuses to run as root.
 
 ## Not verified
 
-- **Windows build/installer**: nothing here was compiled with MSVC. The DirectShow code path in
+- **Windows build/installer**: compiled with MSVC and packaged by CI (`.github/workflows/trackhat-windows.yml`),
+  but not yet run on real Windows. The DirectShow code path in
   `compat/camera-names.cpp` was edited by hand.
 - Real camera capture, exposure presets on a real TrackHat sensor, and tracking quality of the
   0.5-small model have not been tested (no camera in the test environment).

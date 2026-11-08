@@ -73,15 +73,27 @@ jobs:
         BUILD_SHARED_LIBS: 'OFF'
         BUILD_WITH_STATIC_CRT: 'OFF'
 
+    - name: Cache ONNX Runtime
+      id: ort-cache
+      uses: actions/cache@v4
+      with:
+        path: deps/onnxruntime-win-x64-${{ env.ORT_VERSION }}
+        key: ort-win-x64-${{ env.ORT_VERSION }}
+
     - name: Download ONNX Runtime
       shell: pwsh
       run: |
         $v = $env:ORT_VERSION
         $dir = "$env:GITHUB_WORKSPACE/deps"
-        New-Item -ItemType Directory -Force $dir | Out-Null
-        Invoke-WebRequest "https://github.com/microsoft/onnxruntime/releases/download/v$v/onnxruntime-win-x64-$v.zip" -OutFile "$dir/ort.zip"
-        Expand-Archive "$dir/ort.zip" -DestinationPath $dir
         "ORT_DIR=$dir/onnxruntime-win-x64-$v" | Out-File -Append $env:GITHUB_ENV
+        if ("${{ steps.ort-cache.outputs.cache-hit }}" -eq 'true') { Write-Host 'cached'; exit 0 }
+        New-Item -ItemType Directory -Force $dir | Out-Null
+        $url = "https://github.com/microsoft/onnxruntime/releases/download/v$v/onnxruntime-win-x64-$v.zip"
+        for ($i = 1; $i -le 5; $i++) {
+          try { Invoke-WebRequest $url -OutFile "$dir/ort.zip" -ErrorAction Stop; break }
+          catch { Write-Host "attempt $i failed: $($_.Exception.Message)"; if ($i -eq 5) { throw }; Start-Sleep 20 }
+        }
+        Expand-Archive "$dir/ort.zip" -DestinationPath $dir
 
     - name: Build oscpack
       shell: pwsh

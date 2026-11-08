@@ -40,8 +40,14 @@ and hand back something runnable. Prefer finished, tested artifacts over explana
 ## Not verified yet (be honest about this in reports)
 - Nothing has run on **real Windows** or with a **real Trackhat sensor**. Windows build only smoke-tested under Wine (GUI opens, update check works).
 - Exposure presets on real hardware, and tracking quality of the 0.5-small model, are untested.
-- No installer (Inno Setup) was built; Windows delivery so far is a portable zip.
-- MSVC build never attempted (only MinGW cross-build).
+- The MSVC build and Inno Setup installer from CI (`.github/workflows/trackhat-windows.yml`) compile and package,
+  but haven't been launched on real Windows yet.
+
+## Windows builds now come from CI
+- Push to `fork` (https://github.com/Bfreak/opentrack), branch `trackhat-2026.1`. The workflow
+  `Trackhat Windows (MSVC)` uploads the installer and a portable zip as artifacts
+  (`gh run list -R Bfreak/opentrack`, `gh run download <id> -R Bfreak/opentrack`).
+- This machine is the owner's Windows 11 PC. It has `gh` signed in as `Bfreak`, CMake and Ninja, but no MSVC (`cl`), Qt or OpenCV.
 
 ## Conventions
 - Commit messages: imperative, scoped like upstream (`tracker-neuralnet: ...`, `video/opencv: ...`).
