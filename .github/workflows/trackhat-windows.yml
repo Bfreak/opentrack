@@ -114,6 +114,18 @@ jobs:
     - name: Build and install
       run: cmake --build build --config ${{ env.BUILD_TYPE }} --target install
 
+    # Upstream's install only ships platforms/qwindows.dll. TLS is required for the
+    # trackhat.org update check; same plugin set as the MinGW build.
+    - name: Add Qt plugins
+      shell: pwsh
+      run: |
+        $q = "$env:QT_ROOT_DIR/plugins"
+        foreach ($p in 'tls/qschannelbackend.dll','imageformats/qico.dll','imageformats/qjpeg.dll','imageformats/qgif.dll','styles/qmodernwindowsstyle.dll') {
+          $dst = Split-Path "build/install/$p"
+          New-Item -ItemType Directory -Force $dst | Out-Null
+          Copy-Item "$q/$p" $dst -ErrorAction Stop
+        }
+
     - name: Add MSVC runtime DLLs (app-local)
       shell: pwsh
       run: |
