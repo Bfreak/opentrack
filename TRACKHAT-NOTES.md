@@ -44,6 +44,8 @@ The branch was merged (real 3-way merge, history preserved) into the 2026.1.0 re
   names are macros in `<windows.h>`). Numeric values are unchanged, so saved profiles stay valid.
 - ps3eye submodule and MSVC `sdk-paths-*` files use upstream's versions (not used by the TrackHat build).
 - `todo.md` and the personal todo commits were not carried over.
+- Version string comes from `trackhat-opentrack-*` tags (`cmake/opentrack-version.cmake`), and the update check
+  compares version numbers (only newer releases are offered) instead of exact strings.
 
 ## Upstream fixes after 2026.1.0 that were cherry-picked
 

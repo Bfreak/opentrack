@@ -11,6 +11,8 @@ Trackhat features are carried over, with upstream's improvements since then.
 - Camera start-up: MJPEG mode set in the order upstream found fixes a bug (#2136), incl. a Windows-specific variant.
 - Qt 6 build; update checker ported from `QRegExp` to `QRegularExpression`; working Linux build and MinGW Windows build.
 - About eight upstream core/tracker fixes after 2026.1.0 cherry-picked.
+- Version is Trackhat OpenTrack 3.3. The "Software update released" dialog now only appears when trackhat.org
+  advertises a newer version than the one installed, not on every start.
 
 ## Unchanged from 3.2
 - Compact UI, Trackhat branding/icons, 320x240 preview, 30 Hz UI refresh, Trackhat window title.

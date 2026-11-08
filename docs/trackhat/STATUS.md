@@ -32,12 +32,18 @@ The owner can't compile, so builds/tests are done by Claude.
 ## Suggested next steps (in order)
 1. ~~Push the branch to the owner's fork.~~ Done 2026-11-08.
 2. ~~Add GitHub Actions CI with an MSVC build and Inno Setup installer.~~ Done 2026-11-08 (Windows only; no Linux CI job yet).
-3. Fix the **update popup**: the app's version string is `opentrack-2026.1.0-<n>-g<hash>`; trackhat.org advertises
-   `trackhat-opentrack-3.2`, so every start shows "Software update released". Decide a Trackhat version scheme
-   (e.g. `trackhat-opentrack-4.0`), bake it into the version string, and update the website text
-   `SOFTWARE-UPDATE-V3: ...` accordingly. The version also names the installer (`<version>-win32-setup.exe`;
-   "win32" is from the old script, the build is x64).
+3. ~~Fix the update popup.~~ Done 2026-11-08. This release is **trackhat-opentrack-3.3** (owner's choice).
+   Version string = `git describe --match 'trackhat-opentrack-*'`; tag `trackhat-opentrack-3.3-rc1` is pushed
+   and built: https://github.com/Bfreak/opentrack/actions/runs/42494580279 (artifacts `trackhat-opentrack-3.3-rc1-*`).
+   The check now shows the dialog only when the site's version number is higher than the running one
+   (`opentrack/software-update-dialog.cpp`). The site can stay at `trackhat-opentrack-3.2` while 3.3 is in testing.
+   **When 3.3 ships:** tag the release commit `trackhat-opentrack-3.3`, push the tag (CI builds the installer),
+   publish it, then change the website line to `SOFTWARE-UPDATE-V3: trackhat-opentrack-3.3`. Old 3.2 installs
+   still use exact string comparison, so they get notified as soon as the line changes.
+   The installer name contains "win32" (from the old script) although the build is x64; see item 4.
 4. Review the Trackhat Inno Setup script against what is now installed (it builds in CI but its contents are unreviewed).
+   It has no `ArchitecturesInstallIn64BitMode`, so the x64 build installs to `Program Files (x86)`; check where 3.2 installed
+   before changing it, so an upgrade replaces the old copy instead of leaving two.
 5. ~~Bundle VC++ redist~~: done app-locally in CI. Not checked on a clean PC without the redist.
 6. Hardware validation: exposure presets Near/Medium/Far/Custom on a real sensor; compare 0.5-small vs 0.2-small tracking.
 7. Optionally consider upstream commits not taken (DBus, V4L2 ioctl workaround, OpenCV 5 fixes) if Linux users matter.
