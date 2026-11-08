@@ -37,6 +37,15 @@ jobs:
           git fetch --no-recurse-submodules https://github.com/opentrack/opentrack.git 'refs/tags/opentrack-2026.1.0:refs/tags/opentrack-2026.1.0'
         git describe --tags --always
 
+    # SDKs for the Windows-only output protocols (vJoy, FSUIPC, ...) built by "proto-*";
+    # paths are set in sdk-paths-runneradmin@MSVC-windows.cmake.
+    - name: Checkout opentrack-depends
+      uses: actions/checkout@v4
+      with:
+        repository: opentrack/opentrack-depends
+        submodules: true
+        path: opentrack-depends
+
     - name: MSVC developer environment
       uses: ilammy/msvc-dev-cmd@v1
       with:
