@@ -87,7 +87,7 @@ jobs:
         cmake -G Ninja -S $src -B "$env:RUNNER_TEMP/opencv-build" `
           -DCMAKE_BUILD_TYPE=Release `
           "-DCMAKE_INSTALL_PREFIX=$env:GITHUB_WORKSPACE/artifacts/opencv/$env:opencv_tag/windows-x64" `
-          -DBUILD_LIST=core,imgcodecs,imgproc,video,videoio,calib3d,highgui `
+          "-DBUILD_LIST=core,imgcodecs,imgproc,video,videoio,calib3d,highgui" `
           -DBUILD_SHARED_LIBS=OFF -DBUILD_WITH_STATIC_CRT=OFF `
           -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_opencv_apps=OFF `
           -DBUILD_JAVA=OFF -DBUILD_opencv_python3=OFF -DWITH_FFMPEG=OFF -DWITH_OPENCL=OFF `
