@@ -13,17 +13,15 @@ The owner can't compile, so builds/tests are done by Claude.
   Zip delivered to owner: `TrackHat-OpenTrack-2026.1-win64-test.zip` (86 MB, 142 files). Rebuild recipe: `WINDOWS-BUILD.md`.
 - Changelog written: `CHANGELOG.md`.
 
+- **Moved to Claude Code on the owner's Windows PC** (2026-11-08): repo at `Documents\TrackHatOpentrackProject\opentrack-trackhat`,
+  restored from the handoff bundle. Fork created: https://github.com/Bfreak/opentrack (remote `fork`);
+  branch `trackhat-2026.1` and tag `opentrack-2026.1.0` pushed. `origin` is still upstream `opentrack/opentrack`.
+
 ## Blocked / pending
-1. **Fork + push**: creating the GitHub fork from the sandbox is denied by the session proxy (see `GITHUB-AND-ENVIRONMENT.md`).
-   Owner must create the fork of `opentrack/opentrack` (or a new empty repo), then:
-   - from a Claude session, attach it with `add_repo` (access = push), then
-   - `git remote add fork <url>; git push fork trackhat-2026.1` (and the `opentrack-2026.1.0` tag if wanted).
-   A git bundle of the branch is included with this handoff: `trackhat-2026.1.bundle`
-   (thin bundle; clone upstream first, then `git fetch trackhat-2026.1.bundle trackhat-2026.1:trackhat-2026.1`; see `README.md` in the handoff pack).
-2. **Owner testing of the Windows zip with a real sensor**: report back camera detection, exposure presets, tracking, popup behaviour.
+1. **Owner testing of the Windows zip with a real sensor**: report back camera detection, exposure presets, tracking, popup behaviour.
 
 ## Suggested next steps (in order)
-1. Push the branch to the owner's fork (above).
+1. ~~Push the branch to the owner's fork.~~ Done 2026-11-08.
 2. Add GitHub Actions CI: Linux build + (optional) MSVC Windows build using upstream's own Windows CI as a template
    (`.github/workflows` / `ci/` in the repo). This gives an MSVC build and an Inno Setup installer without the sandbox.
 3. Fix the **update popup**: the app's version string is `opentrack-2026.1.0-88-g<hash>`; trackhat.org advertises
@@ -37,5 +35,5 @@ The owner can't compile, so builds/tests are done by Claude.
 
 ## Task list from the chat (final state)
 - Port + merge + Linux build/test: completed
-- Fork and push: pending (blocked on owner)
+- Fork and push: completed 2026-11-08 (Bfreak/opentrack)
 - Windows build: completed (MinGW zip delivered)
