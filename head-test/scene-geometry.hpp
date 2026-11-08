@@ -17,11 +17,23 @@ namespace head_test {
 
 struct Material
 {
-    QString tex_key;           // file path, or "gen:<name>" for a generated image; empty = untextured
+    QString tex_key;           // base colour: file path, or "gen:<name>" for a generated image; empty = untextured
     QImage tex_image;          // set for generated textures
     QVector4D color { 1, 1, 1, 1 }; // sRGB, multiplied with the texture
+    QString normal_key;        // tangent-space normal map (OpenGL convention)
+    float normal_scale = 1;
+    QString mr_key;            // glTF metallic-roughness: G = roughness, B = metallic
+    float roughness = .75f, metallic = 0;
+    QString ao_key;            // occlusion in R
+    bool ao_uv1 = false;       // occlusion uses the second UV set
+    QString emissive_key;
+    QVector3D emissive { 0, 0, 0 }; // linear, multiplied with the emissive texture
+    QVector4D base_uv { 1, 1, 0, 0 }; // base/emissive texture transform: scale.xy, offset.zw
     bool unlit = false;        // instruments, emissive bits
     float alpha_cutoff = -1;   // >= 0: alpha-tested
+    bool blend = false;        // alpha-blended (glass)
+    bool cast_shadow = true;
+    bool shadow_catcher = false; // invisible except for the sun shadows falling on it (ground under vehicles)
     float uv_scale = 1;        // texture tiling
     float fade_start = 0, fade_end = 0; // horizontal distance fade-out (ground patches blending into the sky)
     bool mipmaps = true;
@@ -34,6 +46,7 @@ struct Vertex
     float px, py, pz;
     float nx, ny, nz;
     float u, v;
+    float u1, v1;   // second UV set (lightmap-style occlusion)
 };
 
 struct Prim
@@ -51,8 +64,13 @@ struct SceneDesc
     QString sky_file;
     float sky_yaw_deg = 0;      // rotates the panorama around the vertical axis
     QVector3D sun_dir { 0.3f, 0.8f, -0.4f };
-    QVector3D sun_color { 1.0f, 0.95f, 0.85f };
-    QVector3D sky_ambient { 0.45f, 0.5f, 0.6f };
+    QVector3D sun_color { 1.0f, 0.95f, 0.85f };   // sRGB
+    float sun_strength = 3.0f;    // multiplier on sun_color (linear)
+    float ambient = 1.0f;         // multiplier on sky-based ambient light and reflections
+    float exposure = 1.0f;
+    float shadow_radius = 0;      // half-size of the sun shadow map around the eye (m); 0 = no shadows
+    bool sun_from_sky = false;    // find the sun in the panorama (brightest spot) instead of using sun_dir
+    QVector3D sky_ambient { 0.45f, 0.5f, 0.6f };  // only used when the sky image is missing
     QVector3D ground_ambient { 0.25f, 0.22f, 0.2f };
     QVector3D fog_color { 0.7f, 0.75f, 0.8f };
     float fog_density = 0;      // far layer only (1/m)

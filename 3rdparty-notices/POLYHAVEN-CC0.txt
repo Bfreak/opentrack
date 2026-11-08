@@ -1,2 +1,0 @@
-Head-tracking test window assets (modules/head-test): skies, ground textures and models from
-Poly Haven (https://polyhaven.com), CC0 1.0 public domain. Full list: modules/head-test/CREDITS.txt

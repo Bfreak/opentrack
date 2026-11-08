@@ -1,0 +1,8 @@
+Assets of the head-tracking test window (installed in modules/head-test; full list in CREDITS.txt there):
+
+- Skies, textures and props: Poly Haven (https://polyhaven.com), CC0 1.0 public domain.
+- Cockpit: Cessna 172P for FlightGear (https://github.com/c172p-team/c172p), GPL-2.0-or-later.
+  Licence text and authors: modules/head-test/models/c172p/COPYING and AUTHORS.
+- Race car: "Car Concept" from the Khronos glTF Sample Assets, CC-BY 4.0
+  (https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept),
+  based on a public-domain model by Unity Fan. Licence: modules/head-test/models/carconcept/LICENSE.md.

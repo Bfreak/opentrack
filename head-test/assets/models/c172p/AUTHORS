@@ -1,0 +1,8 @@
+Cessna 172P for FlightGear, https://github.com/c172p-team/c172p (commit 63ba85273b7f44637eb4683dcdc8f97af7821653)
+Licence: GPL-2.0-or-later (COPYING); some files CC-BY/CC0.
+Authors: Original by David Megginson, gsagostinho (Gilberto Agostinho), wlbragg (Wayne Bragg), Juanvvc (Juan Vera del Campo), onox, thevirtualfer, Dany93 (Daniel Dubreuil), legoboyvdlp (Jonathan Redpath), dg-505 (Jonathan Schellhase), tigert (Tuomas Kuosmanen), AndersG (Anders Gidenstam), wkitty42 (Waldo Kitty), algefaen, Horacio, D-ECHO, Jarl Arntzen (jarlarntzen), Benedikt Hallinger, Sascha Reißner, Josh Davidson
+3D model and textures: Fernando Barbosa (thevirtualfer), Jonathan Schellhase (dg-505) and contributors.
+
+Converted to glTF for the TrackHat head-tracking test by head-test/tools/fetch_c172.py:
+assembled from the model XML (no animations), optional/damage/effect parts and sun visors removed,
+glass made neutral, moved so the pilot's eye is at the origin.

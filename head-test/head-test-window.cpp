@@ -19,6 +19,8 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <QDebug>
+#include <QElapsedTimer>
+#include <QFile>
 
 using namespace head_test;
 
@@ -209,6 +211,7 @@ void head_test_window::run_snapshots(const QString& dir)
         { "lean-roll",   { 15, -3, -10, 20, 5, 15 } },
     };
     static const char* scene_names[] = { "cockpit", "racecar", "soldier" };
+    QStringList log;
     for (int sc = 0; sc < scene_count; sc++)
     {
         set_scene(sc);
@@ -220,8 +223,18 @@ void head_test_window::run_snapshots(const QString& dir)
             const QString file = QDir(dir).filePath(QStringLiteral("%1-%2.png").arg(scene_names[sc], s.name));
             qDebug() << "head-test: snapshot" << file << img.save(file);
         }
+        // rough frame time (includes a framebuffer read-back per frame)
+        QElapsedTimer t;
+        t.start();
+        constexpr int frames = 30;
+        for (int i = 0; i < frames; i++)
+            (void)gl->grabFramebuffer();
+        log << QStringLiteral("%1: %2 ms/frame").arg(scene_names[sc]).arg(double(t.nsecsElapsed()) / 1e6 / frames, 0, 'f', 2);
     }
     if (!gl->gl_error().isEmpty())
-        qDebug() << "head-test: GL error:" << gl->gl_error();
+        log << "GL error: " + gl->gl_error();
+    QFile f(QDir(dir).filePath("log.txt"));
+    if (f.open(QIODevice::WriteOnly | QIODevice::Text))
+        f.write(log.join(QLatin1Char('\n')).toUtf8());
     QApplication::exit(0);
 }

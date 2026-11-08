@@ -6,20 +6,24 @@ curves in the Mapping window alongside it.
 
 | Scene | Built from |
 |---|---|
-| Cockpit | Procedural single-seat cockpit (canopy frame, instrument panel with drawn gauges, wings, tail) above CC0 terrain; sky `kloofendal_48d_partly_cloudy_puresky` |
-| Race car | Procedural GT car interior (wheel, dash, roll cage, mirrors, pillars); sky `zwartkops_start_afternoon` (Zwartkops Raceway start line) |
-| Soldier | Sandbag position, CC0 props (crates, jerrycans, barriers, tyres, tree trunk), body-fixed bolt-action rifle; sky `mud_road` with fading mud ground |
+| Cockpit | FlightGear Cessna 172P cockpit (GPL-2.0+), converted by `tools/fetch_c172.py`, lined up on a runway; sky `derelict_airfield_01` |
+| Race car | Khronos glTF sample "CarConcept" (CC-BY 4.0), with a central driving seat; sky `zwartkops_start_afternoon` (Zwartkops Raceway) |
+| Soldier | Hessian sandbag position, about 20 Poly Haven CC0 props, body-fixed rifle; sky `mud_road` with a fading mud ground |
 
-Not animated or interactive by design.
+Not animated or interactive by design. Interiors were chosen over Speed Dreams cars (too low detail), Grab3D's
+CC0 cockpit (toy-like) and Poly Haven trees (`fir_tree_01` alone is 460 MB).
 
 ## Code
 - `head-test/` is its own library (`opentrack-head-test`), linked into the executable. It is listed in `cmake/opentrack-variant.cmake`.
 - `head-test-window.*`: the window (scene buttons, FOV slider, settings, screenshot mode).
-- `head-test-view.*`: QOpenGLWidget renderer (GL 3.3 core). The sky is an equirectangular panorama drawn per pixel. Far geometry
-  (terrain/props) and near geometry (interior) use separate depth ranges.
-- `scenes.cpp`: the three scenes. Units are metres, eye at the origin, -Z forward.
+- `head-test-view.*`: QOpenGLWidget renderer (GL 3.3 core):
+  - glTF PBR (normal, metal/rough, AO on UV0 or UV1, emissive) and blended glass;
+  - 4096² sun shadow map, plus a shadow-catcher ground under the vehicles;
+  - sky-based ambient light and reflections. The sun position is found in the panorama;
+  - ACES tone mapping, and a seam-free mip-mapped 8K sky;
+  - far geometry and near geometry (the interior) use separate depth ranges.
+- `scenes.cpp`: the three scenes. Units are metres, eye at the origin, -Z forward. `OPENTRACK_HEAD_TEST_CAR_EYE=x,y,z` tunes the car eye.
 - `scene-geometry.*`: shape builders and glTF loading (cgltf, MIT, `head-test/3rdparty/cgltf.h`).
-- `gauges.cpp`: instrument faces drawn with QPainter.
 - Main window: `btnHeadTest` in `main-window.ui`, `main_window::show_head_test_window()`.
 
 Pose convention, from opentrack's X-Plane plugin: +yaw looks right, +pitch looks up, +roll tilts clockwise,
@@ -30,17 +34,23 @@ Window: about 62% of the screen width (capped near 16:9 on ultra-wide screens) �
 It is never full screen. Geometry, scene and per-scene FOV are saved under the `trackhat-head-test/` settings group.
 
 ## Assets
-`head-test/assets/` (11 MB, committed), installed to `modules/head-test/`. All assets are Poly Haven CC0 and listed in `assets/CREDITS.txt`.
-To regenerate or change them, use `head-test/tools/fetch_assets.py` (needs Pillow). It keeps base-colour textures only and
-resizes the skies to 4096×2048.
+`head-test/assets/` (about 77 MB, committed) is installed to `modules/head-test/`. Sources and licences are in `assets/CREDITS.txt`
+and `3rdparty-notices/HEAD-TEST-ASSETS.txt`. Tools (they need Pillow):
+- `fetch_assets.py` handles Poly Haven: 8K skies, and PBR textures and models (2k up close, 1k further away).
+- `fetch_c172.py` handles the C172. It follows the FlightGear XML includes, drops optional, damage and effect parts and the sun visors,
+  and writes `COPYING` and `AUTHORS` (including the source commit).
+- `ac3d.py` is the AC3D reader (with ear clipping) and the glTF writer.
+
+CarConcept is the Khronos glTF-JPG variant, copied unchanged with its `LICENSE.md`.
 
 ## Screenshot mode (verification)
 Set `OPENTRACK_HEAD_TEST_SNAPSHOT=<dir>` and start `opentrack.exe`. The app opens the window, saves `window.png`,
-`main-window.png` and `stopped.png`, then `<scene>-<pose>.png` for six poses per scene, and quits.
-This is how the scenes were checked during development (RTX 3090, Windows 11).
+`main-window.png` and `stopped.png`, then `<scene>-<pose>.png` for six poses per scene. It writes rough frame times to `log.txt`
+(6–11 ms on the RTX 3090, including a read-back per frame) and quits.
 
 ## Not verified yet
 - Live tracking driving the view with a real sensor. The pose path is the same call the main window's pose display uses,
   but it hasn't been exercised with tracking running.
+- Performance on integrated GPUs.
 - Machines without OpenGL 3.3 (the window then shows an explanatory message instead of the scene).
 - Linux build of this module.
