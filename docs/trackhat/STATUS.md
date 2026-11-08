@@ -27,7 +27,8 @@ The owner can't compile, so builds/tests are done by Claude.
 
 - **Head-tracking test window** (2026-11-08, branch `trackhat-head-test`): "Test head tracking" button opens a
   3D Cockpit / Race car / Soldier view driven by the mapped pose. See `HEAD-TEST.md`. Built and checked locally
-  with screenshots of every scene from six head poses. **Not yet tried with live tracking.**
+  with screenshots of every scene from six head poses; CI installer:
+  https://github.com/Bfreak/opentrack/actions/runs/42499336005. **Not yet tried with live tracking.** Not merged into `trackhat-2026.1`.
 - **Local Windows build** on the owner's PC (2026-11-08): `scripts/windows-local/build.bat`, deps in `../deps`. See `WINDOWS-LOCAL-BUILD.md`.
 
 ## Blocked / pending
