@@ -1,8 +1,9 @@
 name: CMake
 
+# Trackhat: upstream's generic 3-OS build is manual-only on this fork;
+# see trackhat-windows.yml for the Trackhat Windows build.
 on:
-  - push
-  - pull_request
+  workflow_dispatch:
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
