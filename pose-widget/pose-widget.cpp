@@ -42,10 +42,10 @@ static QVector3D head_point(float theta, float phi)
 
     if (dy < -.05f)
     {
-        // jaw: narrower and shallower towards the chin
+        // jaw: stays broad, then turns in at a defined angle towards the chin
         const float t = (-dy - .05f) / .95f;
-        x *= 1 - .30f * t * t;
-        z *= dz > 0 ? 1 - .10f * t * t : 1 - .38f * t;
+        x *= 1 - .34f * t * t * t - .06f * t;
+        z *= dz > 0 ? 1 - .06f * t * t : 1 - .38f * t;
     }
     if (dz < 0 && dy > -.2f)
         z *= 1.06f + .04f * dy;           // back of the skull
@@ -60,12 +60,20 @@ static QVector3D head_point(float theta, float phi)
         const float u = (dx - cx) / sx, v = (dy - cy) / sy;
         return std::exp(-(u * u + v * v));
     };
-    // mannequin features (no eyes or mouth): nose, brow, eye hollows, cheekbones, chin
-    z += .15f * bump(0, -.10f, .085f, .20f) * front;            // nose
-    z += .05f * bump(0, .20f, .42f, .06f) * front;              // brow
-    z -= .05f * (bump(-.27f, .09f, .11f, .07f) + bump(.27f, .09f, .11f, .07f)) * front; // eye hollows
-    z += .03f * (bump(-.40f, -.12f, .12f, .10f) + bump(.40f, -.12f, .12f, .10f)) * front; // cheekbones
-    z += .09f * bump(0, -.84f, .20f, .10f) * front;             // chin
+    auto smooth = [](float e0, float e1, float v) {
+        const float t = std::clamp((v - e0) / (e1 - e0), 0.f, 1.f);
+        return t * t * (3 - 2 * t);
+    };
+    // minimalist mannequin: only three bold features (no eyes or mouth)
+    {
+        // nose: a straight wedge from between the brows to a crisp tip, cut off underneath
+        const float along = smooth(.20f, -.17f, dy) * (1 - smooth(-.19f, -.27f, dy));
+        const float half_width = .045f + .055f * along;
+        const float across = std::exp(-(dx / half_width) * (dx / half_width));
+        z += .24f * along * across * front;
+    }
+    z += .08f * bump(0, .21f, .46f, .055f) * front;             // brow ridge
+    z += .14f * bump(0, -.86f, .24f, .09f) * front;             // chin
     return { x, y + .08f, z };
 }
 
@@ -75,10 +83,15 @@ void pose_widget::build_head()
     tris.clear();
 
     // head: latitude/longitude grid
-    constexpr int rings = 44, segs = 60;
+    // longitudes are packed towards the face (phi = 0) so the narrow nose ridge is resolved
+    constexpr int rings = 56, segs = 80;
     for (int i = 0; i <= rings; i++)
         for (int j = 0; j < segs; j++)
-            verts.push_back(head_point(pi * float(i) / rings, 2 * pi * float(j) / segs));
+        {
+            const float s = float(j) / segs - .5f;                     // -0.5 .. 0.5, 0 = front
+            const float phi = pi * (s < 0 ? -1.f : 1.f) * std::pow(std::fabs(2 * s), 1.7f);
+            verts.push_back(head_point(pi * float(i) / rings, phi));
+        }
     auto H = [&](int i, int j) { return i * segs + (j % segs); };
     for (int i = 0; i < rings; i++)
         for (int j = 0; j < segs; j++)
@@ -132,22 +145,94 @@ void pose_widget::build_head()
 
 void pose_widget::set_grid_background(bool dark_theme)
 {
-    if (dark_theme)
+    dark_grid = dark_theme;
+    update();
+}
+
+// Vector perspective "room" behind the head (replaces the old grid PNGs): stays sharp at any size/DPI.
+void pose_widget::draw_grid(QPainter& p) const
+{
+    const float w = float(width()), h = float(height());
+    const QPointF c(w * .5, h * .5);
+    constexpr float depth_k = 1.75f; // the back wall is 1 / (1 + k) the size of the widget
+    // X, Y in [-1, 1] across the room, Z from 0 (screen) to 1 (back wall)
+    auto proj = [&](float X, float Y, float Z) {
+        const float s = 1 / (1 + depth_k * Z);
+        return QPointF(c.x() + X * s * w * .5f, c.y() - Y * s * h * .5f);
+    };
+    const QColor line = dark_grid ? QColor(150, 136, 205) : QColor(70, 70, 100);
+    auto pen = [&](float alpha) {
+        QColor col = line;
+        col.setAlphaF(std::clamp(alpha, 0.f, 1.f));
+        QPen pn(col, 1);
+        pn.setCosmetic(true);
+        return pn;
+    };
+    // lines running into the room fade with distance
+    auto depth_line = [&](float X, float Y, float a_near, float a_far) {
+        const QPointF a = proj(X, Y, 0), b = proj(X, Y, 1);
+        QLinearGradient g(a, b);
+        QColor cn = line, cf = line;
+        cn.setAlphaF(a_near);
+        cf.setAlphaF(a_far);
+        g.setColorAt(0, cn);
+        g.setColorAt(1, cf);
+        QPen pn(QBrush(g), 1);
+        pn.setCosmetic(true);
+        p.setPen(pn);
+        p.drawLine(a, b);
+    };
+
+    p.save();
+    p.setRenderHint(QPainter::Antialiasing, true);
+
+    // soft vignette instead of a flat fill
+    QRadialGradient bg(c, std::max(w, h) * .75f);
+    bg.setColorAt(0, dark_grid ? QColor(26, 23, 38) : QColor(238, 238, 244));
+    bg.setColorAt(1, dark_grid ? QColor(9, 9, 13) : QColor(206, 206, 216));
+    p.fillRect(rect(), bg);
+
+    // floor, ceiling and side walls
+    constexpr int cols = 8, rows = 6;
+    for (int k = 1; k < cols; k++)
+        for (float Y : { -1.f, 1.f })
+            depth_line(-1 + 2.f * k / cols, Y, .42f, .14f);
+    for (int k = 1; k < rows; k++)
+        for (float X : { -1.f, 1.f })
+            depth_line(X, -1 + 2.f * k / rows, .42f, .14f);
+    for (float X : { -1.f, 1.f })
+        for (float Y : { -1.f, 1.f })
+            depth_line(X, Y, .60f, .30f); // room edges
+
+    // depth frames, fading towards the back
+    constexpr int frames = 7;
+    for (int i = 1; i < frames; i++)
     {
-        // a darker, slightly violet version of the grid
-        background = QImage(":/images/grid-dark.png").convertToFormat(QImage::Format_ARGB32);
-        for (int y = 0; y < background.height(); y++)
-        {
-            QRgb* row = reinterpret_cast<QRgb*>(background.scanLine(y));
-            for (int x = 0; x < background.width(); x++)
-            {
-                const QRgb c = row[x];
-                row[x] = qRgba(int(qRed(c) * .38f) + 4, int(qGreen(c) * .36f) + 3, int(qBlue(c) * .42f) + 9, qAlpha(c));
-            }
-        }
+        const float Z = float(i) / frames;
+        p.setPen(pen(.10f + .26f * (1 - Z)));
+        p.drawPolygon(QPolygonF { proj(-1, -1, Z), proj(1, -1, Z), proj(1, 1, Z), proj(-1, 1, Z) });
     }
-    else
-        background = QImage(":/images/grid-light.png");
+
+    // back wall
+    p.setPen(pen(.16f));
+    for (int k = 1; k < cols; k++)
+    {
+        const float X = -1 + 2.f * k / cols;
+        p.drawLine(proj(X, -1, 1), proj(X, 1, 1));
+    }
+    for (int k = 1; k < rows; k++)
+    {
+        const float Y = -1 + 2.f * k / rows;
+        p.drawLine(proj(-1, Y, 1), proj(1, Y, 1));
+    }
+    p.setPen(pen(.55f));
+    p.drawPolygon(QPolygonF { proj(-1, -1, 1), proj(1, -1, 1), proj(1, 1, 1), proj(-1, 1, 1) });
+
+    // centre cross-hair
+    p.setPen(pen(.30f));
+    p.drawLine(QPointF(c.x(), 0), QPointF(c.x(), h));
+    p.drawLine(QPointF(0, c.y()), QPointF(w, c.y()));
+    p.restore();
 }
 
 void pose_widget::present(double yaw, double pitch, double roll, double x, double y, double z)
@@ -179,17 +264,7 @@ void pose_widget::paintEvent(QPaintEvent*)
     const bool mirrored = mirror.checkState() == Qt::Checked;
 
     QPainter p(this);
-    p.fillRect(rect(), palette().brush(backgroundRole()));
-    if (!background.isNull())
-        p.drawImage(rect(), background);
-    {
-        p.save();
-        p.setPen(QPen(QColor(70, 66, 84), 1, Qt::SolidLine));
-        const int w = width(), h = height();
-        p.drawLine(w / 2, 0, w / 2, h);
-        p.drawLine(0, h / 2, w, h / 2);
-        p.restore();
-    }
+    draw_grid(p);
 
     // Camera view of the user (mirror off): turning right turns the face towards screen left.
     QMatrix4x4 rot;

@@ -20,6 +20,8 @@
 #include <QCheckBox>
 #include <QVector3D>
 
+class QPainter;
+
 namespace pose_widget_impl {
 
 using namespace euler;
@@ -37,9 +39,10 @@ private:
     void resizeEvent(QResizeEvent *event) override;
     void paintEvent(QPaintEvent*) override;
     void build_head();
+    void draw_grid(QPainter& p) const;
 
     Pose_ R, T;
-    QImage background;
+    bool dark_grid = true;
 
     std::vector<QVector3D> verts, normals;
     std::vector<std::array<int, 3>> tris;
