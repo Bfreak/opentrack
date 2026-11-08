@@ -91,6 +91,13 @@ main_window::main_window() : State(OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH)
                     w->grab().save(QDir(dir).filePath(QString::fromLatin1(name) + ".png"));
             };
             save(this, "main");
+            ui.pose_display->present(35, -12, 10, 0, 0, 0);
+            save(ui.pose_display, "head-a");
+            ui.pose_display->present(-60, 18, -15, 8, 4, -10);
+            save(ui.pose_display, "head-b");
+            ui.pose_display->present(150, 5, 0, 0, 0, 0);
+            save(ui.pose_display, "head-c");
+            ui.pose_display->present(0, 0, 0, 0, 0, 0);
             save(options_widget.get(), "options");
             save(mapping_widget.get(), "mapping");
             save(head_test_widget.get(), "headtest");

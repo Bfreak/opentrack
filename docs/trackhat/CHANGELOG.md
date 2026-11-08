@@ -17,6 +17,9 @@ Trackhat features are carried over, with upstream's improvements since then.
 - New **Test head tracking** window: look around a cockpit, a race car or a soldier's position with your
   head tracking and adjust the Mapping curves alongside it.
 
+- New **Midnight** look: black/grey with violet accents (`gui/themes/midnight.qss`, `OPENTRACK_THEME=none` for the old look).
+  Output and Profile are now full-width rows, and the pose preview shows a shaded 3D head on a darker grid.
+
 ## Unchanged from 3.2
 - Compact UI, Trackhat branding/icons, 320x240 preview, 30 Hz UI refresh, Trackhat window title.
 - Neural-net tracker and accela filter forced; selectors hidden.

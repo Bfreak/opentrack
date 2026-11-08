@@ -1,4 +1,4 @@
-/* TrackHat theme prototype A: "Midnight" - modern, flat, rounded; violet accent.
+/* TrackHat theme "Midnight" (default) - modern, flat, rounded; black/grey with a violet accent.
 @window = #111116
 @windowtext = #E7E7EE
 @base = #0B0B0F

@@ -113,11 +113,13 @@ static void set_qt_style()
 
 // Trackhat: themes are a palette + Qt stylesheet in <modules>/themes/<name>.qss.
 // Palette entries are declared in the file as "@role = #rrggbb" (e.g. "@window = #101014").
-// Prototype stage: only applied when OPENTRACK_THEME=<name> is set.
+// The default is "midnight"; OPENTRACK_THEME=<name> picks another file, OPENTRACK_THEME=none turns theming off.
 static void apply_trackhat_theme()
 {
-    const QString name = qEnvironmentVariable("OPENTRACK_THEME");
+    QString name = qEnvironmentVariable("OPENTRACK_THEME");
     if (name.isEmpty())
+        name = QStringLiteral("midnight");
+    if (name == QLatin1String("none"))
         return;
     const QString dir = OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH "themes/";
     QFile f(dir + name + ".qss");

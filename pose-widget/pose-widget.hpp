@@ -12,15 +12,20 @@
 
 #include "export.hpp"
 
+#include <array>
+#include <vector>
+
 #include <QWidget>
 #include <QImage>
 #include <QCheckBox>
+#include <QVector3D>
 
-//#define TEST
 namespace pose_widget_impl {
 
 using namespace euler;
 
+// Trackhat: shows the pose as a shaded, featureless 3D head (software-rendered with QPainter,
+// so it still works as a transparent overlay on top of the camera preview).
 struct OTR_POSE_WIDGET_EXPORT pose_widget final : QWidget
 {
 public:
@@ -31,20 +36,17 @@ public:
 private:
     void resizeEvent(QResizeEvent *event) override;
     void paintEvent(QPaintEvent*) override;
-
-    QT_WARNING_PUSH
-    QT_WARNING_DISABLE_DEPRECATED
+    void build_head();
 
     Pose_ R, T;
-    QImage front{QImage{":/images/side1.png"}.convertToFormat(QImage::Format_ARGB32)};
-    QImage back {QImage{":/images/side6.png"}.convertToFormat(QImage::Format_ARGB32)
-                                             .mirrored(true,false)};
     QImage background;
 
-    QImage shine {QImage{front.width(), front.height(), QImage::Format_ARGB32}};
-    QImage shadow{QImage{front.width(), front.height(), QImage::Format_ARGB32}};
-
-    QT_WARNING_POP
+    std::vector<QVector3D> verts, normals;
+    std::vector<std::array<int, 3>> tris;
+    // per-frame scratch
+    std::vector<QVector3D> xverts, xnormals;
+    std::vector<QPointF> sverts;
+    std::vector<float> zbuf;
 };
 
 }

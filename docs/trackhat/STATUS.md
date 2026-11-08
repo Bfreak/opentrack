@@ -32,6 +32,12 @@ The owner can't compile, so builds/tests are done by Claude.
   (limit 300 MB), CI: https://github.com/Bfreak/opentrack/actions/runs/42512474592. **Upgrade not yet tried live.** Not merged into `trackhat-2026.1`.
 - **Local Windows build** on the owner's PC (2026-11-08): `scripts/windows-local/build.bat`, deps in `../deps`. See `WINDOWS-LOCAL-BUILD.md`.
 
+- **UI theme "Midnight"** (2026-11-08, branch `trackhat-ui-theme`, built on `trackhat-head-test`): chosen by the owner
+  from three prototypes. It's the default (palette + stylesheet in `gui/themes/midnight.qss`, loaded by `gui/init.cpp`). The curve editor colours are themeable.
+  The Profile dropdown is now under Output and both are full width. The pose preview's 2D octopus is replaced by a software-rendered
+  3D mannequin head (`pose-widget/`), on a darker grid. `OPENTRACK_UI_SNAPSHOT=<dir>` captures the windows for review.
+  Not yet checked by the owner in the running app.
+
 ## Blocked / pending
 1. **Owner testing of the CI installer on real Windows with a real sensor**: camera detection, exposure presets,
    tracking, update popup. Nothing from the MSVC build has been run yet, not even launched.
