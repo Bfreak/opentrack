@@ -135,6 +135,7 @@ public:
 
     void toggle_zero();
     void toggle_enabled();
+    bool is_enabled();   // false while tracking is paused with the Toggle shortcuts
 
     void set_held_center(bool value);
     void set_enabled(bool value);

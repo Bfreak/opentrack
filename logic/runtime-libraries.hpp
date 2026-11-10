@@ -10,7 +10,10 @@
 
 #include "api/plugin-support.hpp"
 #include "compat/tr.hpp"
+#include "multi-protocol.hpp"
 #include "export.hpp"
+
+#include <vector>
 
 class QFrame;
 
@@ -23,9 +26,10 @@ public:
 
     std::shared_ptr<ITracker> pTracker;
     std::shared_ptr<IFilter> pFilter;
-    std::shared_ptr<IProtocol> pProtocol;
+    std::shared_ptr<IProtocol> pProtocol;          // same object as `protocols`
+    std::shared_ptr<multi_protocol> protocols;     // Trackhat: all enabled output protocols
 
-    runtime_libraries(QFrame* frame, dylibptr t, dylibptr p, dylibptr f);
+    runtime_libraries(QFrame* frame, dylibptr t, const std::vector<dylibptr>& p, dylibptr f);
     runtime_libraries() = default;
 
     bool correct = false;

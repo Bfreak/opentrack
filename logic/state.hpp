@@ -28,6 +28,9 @@ struct OTR_LOGIC_EXPORT State
 
     dylib_ptr current_tracker();
     dylib_ptr current_protocol();
+    // Trackhat: all protocols switched on in Options > Protocols (default: all but mouse emulation)
+    dylib_list enabled_protocols();
+    bool protocol_enabled(const QString& module_name);
     dylib_ptr current_filter();
 
     Modules modules;

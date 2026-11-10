@@ -20,6 +20,13 @@ Trackhat features are carried over, with upstream's improvements since then.
 - New **Midnight** look: black/grey with violet accents (`gui/themes/midnight.qss`, `OPENTRACK_THEME=none` for the old look).
   Output and Profile are now full-width rows, and the pose preview shows a shaded 3D head on a darker grid.
 
+- **All output protocols at once**: head tracking is sent to every protocol by default (freetrack/TrackIR, FlightGear,
+  SimConnect, UDP, vJoy, OSC), so most games work without choosing one. Pick which are on, and open their settings,
+  in Options > Protocols. Mouse emulation stays off unless you enable it, and warns you first.
+- The pose preview shows a head with a crosshair and a reticle: green markers circle while tracking, turn red when
+  paused, and "tracking stopped" is shown when tracking is off.
+- The profile button shows a plus for creating profiles.
+
 ## Unchanged from 3.2
 - Compact UI, Trackhat branding/icons, 320x240 preview, 30 Hz UI refresh, Trackhat window title.
 - Neural-net tracker and accela filter forced; selectors hidden.

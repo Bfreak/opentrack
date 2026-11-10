@@ -11,10 +11,18 @@
 
 #include <utility>
 
+#include "logic/multi-protocol.hpp"
+
 #include <QPushButton>
 #include <QLayout>
 #include <QDialog>
 #include <QFileDialog>
+#include <QCheckBox>
+#include <QGridLayout>
+#include <QLabel>
+#include <QMessageBox>
+#include <QSignalBlocker>
+#include <QVBoxLayout>
 
 using namespace options;
 using namespace options::globals;
@@ -54,10 +62,13 @@ void options_dialog::set_disable_translation_state(bool value)
 options_dialog::options_dialog(std::unique_ptr<ITrackerDialog>& tracker_dialog_,
                                std::unique_ptr<IProtocolDialog>& proto_dialog_,
                                std::unique_ptr<IFilterDialog>& filter_dialog_,
-                               std::function<void(bool)> pause_keybindings) :
-    pause_keybindings(std::move(pause_keybindings))
+                               std::function<void(bool)> pause_keybindings,
+                               protocol_hooks protocols) :
+    pause_keybindings(std::move(pause_keybindings)),
+    proto_hooks(std::move(protocols))
 {
     ui.setupUi(this);
+    init_protocols_tab();
 
     tie_setting(main.tray_enabled, ui.trayp);
     tie_setting(main.tray_start, ui.tray_start);
@@ -214,6 +225,164 @@ options_dialog::options_dialog(std::unique_ptr<ITrackerDialog>& tracker_dialog_,
     connect(ui.buttonBox, &QDialogButtonBox::rejected, this, &options_dialog::reject);
     connect(this, &options_dialog::accepted, this, &options_dialog::doAccept);
     connect(this, &options_dialog::rejected, this, &options_dialog::doReject);
+}
+
+// ---- Trackhat: Protocols tab ----
+
+void options_dialog::init_protocols_tab()
+{
+    if (proto_hooks.protocols.empty())
+        return;
+
+    protocols_tab = new QWidget(this);
+    auto* outer = new QVBoxLayout(protocols_tab);
+    outer->setContentsMargins(12, 12, 12, 12);
+    outer->setSpacing(10);
+
+    auto* intro = new QLabel(tr("Head tracking is sent to every protocol ticked below at the same time, "
+                                "so most games and simulators work without choosing one."), protocols_tab);
+    intro->setWordWrap(true);
+    outer->addWidget(intro);
+
+    auto* box = new QGroupBox(tr("Output protocols"), protocols_tab);
+    auto* grid = new QGridLayout(box);
+    grid->setHorizontalSpacing(14);
+    grid->setVerticalSpacing(8);
+    grid->setColumnStretch(1, 1);
+
+    int row = 0;
+    for (const auto& lib : proto_hooks.protocols)
+    {
+        if (!lib)
+            continue;
+        const QString name = lib->module_name;
+        protocol_row r;
+        r.module_name = name;
+        r.enabled = new QCheckBox(lib->name, box);
+        r.enabled->setIcon(lib->icon);
+        r.status = new QLabel(box);
+        r.status->setWordWrap(true);
+        auto* settings = new QPushButton(tr("Settings"), box);
+        settings->setEnabled(lib->Dialog != nullptr);
+        settings->setToolTip(tr("Settings for %1").arg(lib->name));
+
+        grid->addWidget(r.enabled, row, 0);
+        grid->addWidget(r.status, row, 1);
+        grid->addWidget(settings, row, 2);
+        row++;
+
+        QCheckBox* cb = r.enabled;
+        connect(cb, &QCheckBox::toggled, this, [this, cb, name](bool on) {
+            if (on && multi_protocol::is_mouse(name) && !confirm_mouse_emulation())
+            {
+                QSignalBlocker block(cb);
+                cb->setChecked(false);
+                return;
+            }
+            mods.b->store_kv(multi_protocol::settings_key(name), on);
+            refresh_protocol_status();
+        });
+        connect(settings, &QPushButton::clicked, this, [this, name] {
+            if (proto_hooks.show_settings)
+                proto_hooks.show_settings(name);
+        });
+        proto_rows.push_back(r);
+    }
+    outer->addWidget(box);
+
+    auto* note = new QLabel(tr("Changes take effect the next time tracking is started."), protocols_tab);
+    note->setWordWrap(true);
+    note->setEnabled(false);
+    outer->addWidget(note);
+    outer->addStretch(1);
+
+    ui.tabWidget->insertTab(2, protocols_tab, tr("Protocols"));
+    ui.tabWidget->setCurrentIndex(0);
+
+    connect(&*mods.b, &options::detail::bundle::reloading, this, &options_dialog::sync_protocol_checkboxes);
+    sync_protocol_checkboxes();
+}
+
+void options_dialog::sync_protocol_checkboxes()
+{
+    for (protocol_row& r : proto_rows)
+    {
+        const QString key = multi_protocol::settings_key(r.module_name);
+        const bool on = mods.b->contains(key) ? mods.b->get_variant(key).toBool()
+                                              : multi_protocol::default_enabled(r.module_name);
+        QSignalBlocker block(r.enabled);
+        r.enabled->setChecked(on);
+    }
+    refresh_protocol_status();
+}
+
+void options_dialog::refresh_protocol_status()
+{
+    for (protocol_row& r : proto_rows)
+    {
+        QString text, style;
+        if (!r.enabled->isChecked())
+            text = tr("Off");
+        else if (proto_hooks.status)
+        {
+            const protocol_status st = proto_hooks.status(r.module_name);
+            switch (st.state)
+            {
+            case protocol_status::active:
+                text = tr("Active");
+                style = QStringLiteral("color: #4ADE80;");
+                break;
+            case protocol_status::failed:
+                text = tr("Not available: %1").arg(st.error);
+                style = QStringLiteral("color: #FBBF24;");
+                break;
+            case protocol_status::unknown:
+                break;
+            }
+        }
+        r.status->setText(text);
+        r.status->setStyleSheet(style);
+        r.status->setEnabled(r.enabled->isChecked());
+    }
+}
+
+bool options_dialog::confirm_mouse_emulation()
+{
+    auto bound = [](const key_opts& k) { return !k.keycode->isEmpty() || !k.guid->isEmpty(); };
+    const bool has_pause = bound(main.key_toggle1) || bound(main.key_toggle2) ||
+                           bound(main.key_toggle_press1) || bound(main.key_toggle_press2);
+    const bool has_stop = bound(main.key_stop_tracking1) || bound(main.key_stop_tracking2) ||
+                          bound(main.key_toggle_tracking1) || bound(main.key_toggle_tracking2);
+
+    QString text = tr("With mouse emulation on, your head movement controls this computer's mouse cursor.\n\n"
+                      "As soon as tracking starts, the cursor follows your head. That can make it hard "
+                      "to click anything, including the Stop button.\n\n"
+                      "Before you continue, set keyboard shortcuts for pausing tracking (Toggle) and for "
+                      "stopping tracking in the Shortcuts tab, so you can always get the cursor back.");
+    QStringList missing;
+    if (!has_pause)
+        missing << tr("Toggle (pause)");
+    if (!has_stop)
+        missing << tr("Stop tracking");
+    if (!missing.isEmpty())
+        text += QStringLiteral("\n\n") + tr("You don't have a shortcut set yet for: %1.").arg(missing.join(QStringLiteral(", ")));
+
+    QMessageBox box(this);
+    box.setIcon(QMessageBox::Warning);
+    box.setWindowTitle(tr("Mouse emulation"));
+    box.setText(tr("Your head will move the mouse cursor"));
+    box.setInformativeText(text);
+    QPushButton* yes = box.addButton(tr("Enable mouse emulation"), QMessageBox::AcceptRole);
+    QPushButton* no = box.addButton(QMessageBox::Cancel);
+    box.setDefaultButton(no);
+    box.exec();
+    return box.clickedButton() == yes;
+}
+
+void options_dialog::switch_to_protocols_tab()
+{
+    if (protocols_tab)
+        ui.tabWidget->setCurrentWidget(protocols_tab);
 }
 
 void options_dialog::bind_key(key_opts& kopts, QLabel* label)
@@ -374,6 +543,7 @@ void options_dialog::save()
 {
     qDebug() << "options_dialog: save";
     main.b->save();
+    mods.b->save();
     ui.game_detector->save();
     set_disable_translation_state(ui.disable_translation->isChecked());
 
@@ -388,6 +558,7 @@ void options_dialog::reload()
     ui.game_detector->revert();
 
     main.b->reload();
+    mods.b->reload();
     for (auto* dlg : module_list{ tracker_dialog, proto_dialog, filter_dialog })
         if (dlg)
             dlg->reload();

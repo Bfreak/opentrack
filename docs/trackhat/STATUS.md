@@ -1,4 +1,4 @@
-# Status (as of 2026-11-08)
+# Status (as of 2026-11-10)
 
 ## Goal
 Port Trackhat's custom OpenTrack (sensor v2 / v3, 2023-24) onto the latest OpenTrack release (`opentrack-2026.1.0`)
@@ -38,9 +38,28 @@ The owner can't compile, so builds/tests are done by Claude.
   3D mannequin head (`pose-widget/`), on a darker grid. `OPENTRACK_UI_SNAPSHOT=<dir>` captures the windows for review.
   Not yet checked by the owner in the running app.
 
+- **Final 3.3 changes** (2026-11-10, owner's list):
+  - **Output to all protocols at once** (`logic/multi-protocol.*`): every enabled protocol is started; one that can't start
+    (e.g. SimConnect without FSX, vJoy without its driver) is skipped and reported, and never blocks tracking. The vJoy
+    "driver problem" message box is removed for the same reason. Default: everything on except mouse emulation.
+    Stored per profile as `protocol-enabled-<module>` in the `modules` section; the old `protocol-dll` key is ignored.
+  - **Options > Protocols** tab (third tab, built in `gui/options-dialog.cpp`): a checkbox, status ("Active" / "Not available: ...")
+    and a Settings button per protocol. Ticking mouse emulation shows a warning that also lists missing pause/stop shortcuts.
+    Changes apply at the next tracking start. The Output box is gone from the main window; the profile button shows a "+".
+  - **Pose preview** (`pose-widget/`): human-like mannequin head (no neck, ears, nose, lips), a 3D crosshair through the head
+    that is hidden where the head covers it, and a reticle ring with two markers that circle once every 8 s. The markers
+    stop and turn red while tracking is paused (`pipeline::is_enabled()`). When stopped the head is hidden and
+    "tracking stopped" is shown in the brand font Kinishinai NBP (CC BY-SA 3.0, embedded from `pose-widget/fonts`).
+  - Checked on the owner's PC with the real sensor through the screenshot self-test
+    (`OPENTRACK_UI_SNAPSHOT=<dir>` plus `OPENTRACK_UI_SNAPSHOT_START=1` to start tracking for 3 s):
+    FlightGear, freetrack and UDP reported Active, SimConnect "Not available", mouse Off; the warning dialog rendered.
+    **Not checked: an actual game receiving data with several protocols on at once, vJoy/OSC (CI build only), pause colours live.**
+  - Installer file is now named `<version>-win64-setup.exe`.
+- **Release wrap-up** (2026-11-10): `trackhat-head-test` and `trackhat-ui-theme` are merged into `trackhat-2026.1` (fast-forward).
+
 ## Blocked / pending
-1. **Owner testing of the CI installer on real Windows with a real sensor**: camera detection, exposure presets,
-   tracking, update popup. Nothing from the MSVC build has been run yet, not even launched.
+1. **Owner testing of the 3.3 installer in real games**: camera detection, exposure presets, tracking, update popup,
+   and games picking up tracking with all protocols on (TrackIR/freetrack titles first).
 
 ## Suggested next steps (in order)
 1. ~~Push the branch to the owner's fork.~~ Done 2026-11-08.

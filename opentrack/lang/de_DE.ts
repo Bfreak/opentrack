@@ -66,10 +66,6 @@
         <translation>Stoppen</translation>
     </message>
     <message>
-        <source>Output</source>
-        <translation>Ausgabe</translation>
-    </message>
-    <message>
         <source>Create new empty config</source>
         <translation>Neue leere Konfiguration erstellen</translation>
     </message>
@@ -171,6 +167,14 @@ Das Programm beendet sich nun.</translation>
     </message>
     <message>
         <source>Test head tracking</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create a new profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>+</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

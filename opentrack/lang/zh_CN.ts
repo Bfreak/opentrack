@@ -66,10 +66,6 @@
         <translation>停止</translation>
     </message>
     <message>
-        <source>Output</source>
-        <translation>输出协议</translation>
-    </message>
-    <message>
         <source>Running as root is bad</source>
         <translation>以管理员权限运行存在风险</translation>
     </message>
@@ -171,6 +167,14 @@ Exiting now.</source>
     </message>
     <message>
         <source>Test head tracking</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create a new profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>+</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

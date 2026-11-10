@@ -27,16 +27,6 @@
         <translation>库文件加载失败</translation>
     </message>
     <message>
-        <source>Error occurred while loading protocol %1
-
-%2
-</source>
-        <translation>加载协议 %1 时发生错误
-
-%2
-</translation>
-    </message>
-    <message>
         <source>Error occurred while loading filter %1
 
 %2

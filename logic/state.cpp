@@ -44,6 +44,23 @@ dylib_ptr State::current_protocol()
     return ptr;
 }
 
+bool State::protocol_enabled(const QString& module_name)
+{
+    const QString key = multi_protocol::settings_key(module_name);
+    if (m.b->contains(key))
+        return m.b->get_variant(key).toBool();
+    return multi_protocol::default_enabled(module_name);
+}
+
+dylib_list State::enabled_protocols()
+{
+    dylib_list ret;
+    for (const dylib_ptr& lib : modules.protocols())
+        if (lib && protocol_enabled(lib->module_name))
+            ret.push_back(lib);
+    return ret;
+}
+
 dylib_ptr State::current_filter()
 {
     const QString& module =

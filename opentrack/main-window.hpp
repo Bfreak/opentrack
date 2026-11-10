@@ -31,6 +31,7 @@
 #include <QAction>
 #include <QList>
 
+#include <map>
 #include <memory>
 
 #include "ui_main-window.h"
@@ -64,7 +65,10 @@ class main_window final : public QMainWindow, private State
     std::unique_ptr<head_test_window> head_test_widget;
 
     std::unique_ptr<IFilterDialog> pFilterDialog;
-    std::unique_ptr<IProtocolDialog> pProtocolDialog;
+    // Trackhat: one settings window per output protocol, opened from Options > Protocols
+    std::map<QString, std::unique_ptr<IProtocolDialog>> proto_dialogs;
+    std::map<QString, QString> proto_errors;   // module -> why it didn't start (last tracking start)
+    bool proto_status_known = false;
     std::unique_ptr<ITrackerDialog> pTrackerDialog;
 
     process_detector_worker det;
@@ -113,6 +117,7 @@ public:
 
     void show_tracker_settings_(bool show);
     void show_proto_settings_(bool show);
+    void show_protocol_dialog(const QString& module_name);
     void show_filter_settings_(bool show);
     void show_tracker_settings() { show_tracker_settings_(true); }
     void show_proto_settings() { show_proto_settings_(true); }

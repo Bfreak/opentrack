@@ -7,7 +7,7 @@
 #   pragma clang diagnostic ignored "-Wcomma"
 #endif
 
-runtime_libraries::runtime_libraries(QFrame* frame, dylibptr t, dylibptr p, dylibptr f)
+runtime_libraries::runtime_libraries(QFrame* frame, dylibptr t, const std::vector<dylibptr>& p, dylibptr f)
 {
     auto error = [](const QString& msg) { return module_status_mixin::error(msg); };
 
@@ -18,20 +18,10 @@ runtime_libraries::runtime_libraries(QFrame* frame, dylibptr t, dylibptr p, dyli
 
     with_tracker_teardown sentinel;
 
-    pProtocol = make_dylib_instance<IProtocol>(p);
-
-    if (!pProtocol)
-    {
-        qDebug() << "protocol dylib load failure";
-        goto end;
-    }
-
-    if(status = pProtocol->initialize(), !status.is_ok())
-    {
-        status = error(tr("Error occurred while loading protocol %1\n\n%2\n")
-                       .arg(p->name, status.error));
-        goto end;
-    }
+    // Trackhat: every enabled protocol is started; one that can't start (missing driver, game SDK...)
+    // is skipped and reported in Options > Protocols instead of blocking tracking.
+    protocols = std::make_shared<multi_protocol>(p);
+    pProtocol = protocols;
 
     pTracker = make_dylib_instance<ITracker>(t);
     pFilter = make_dylib_instance<IFilter>(f);
@@ -70,6 +60,7 @@ end:
     pTracker = nullptr;
     pFilter = nullptr;
     pProtocol = nullptr;
+    protocols = nullptr;
 
     if (!status.is_ok())
         QMessageBox::critical(nullptr,

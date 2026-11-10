@@ -24,6 +24,10 @@ and hand back something runnable. Prefer finished, tested artifacts over explana
   1 ONNX thread, model `head-pose-0.5-small.onnx` (0.2-small still shipped).
 - `video-opencv/`: exposure presets, DirectShow camera settings; `compat/camera-names.cpp`: no device path appended to DShow names.
 - `opentrack/software-update-dialog.cpp`: checks trackhat.org for `SOFTWARE-UPDATE-V3: <version>`.
+- `logic/multi-protocol.*`: output goes to **all enabled protocols at once** (default: all except mouse emulation);
+  managed in Options > Protocols (`gui/options-dialog.cpp`). There is no protocol dropdown on the main window.
+- `gui/themes/midnight.qss` (default theme), `pose-widget/` (mannequin head, crosshair, reticle, brand font),
+  `head-test/` (3D test window). See `docs/trackhat/STATUS.md` and `HEAD-TEST.md`.
 - `exposure_preset` enumerators are `range_near/range_far/range_medium` (NOT `near`/`far`: `<windows.h>` macros). Keep numeric values; profiles depend on them.
 
 ## Hard rules / gotchas

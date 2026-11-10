@@ -80,6 +80,9 @@ main_window::main_window() : State(OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH)
     if (const QString dir = qEnvironmentVariable("OPENTRACK_UI_SNAPSHOT"); !dir.isEmpty())
     {
         QTimer::singleShot(500, this, [this] {
+            // OPENTRACK_UI_SNAPSHOT_START=1 also starts tracking for a few seconds (needs the camera)
+            if (qEnvironmentVariableIsSet("OPENTRACK_UI_SNAPSHOT_START"))
+                start_tracker_();
             show_options_dialog(true);
             show_mapping_window();
             show_head_test_window();
@@ -90,14 +93,68 @@ main_window::main_window() : State(OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH)
                 if (w)
                     w->grab().save(QDir(dir).filePath(QString::fromLatin1(name) + ".png"));
             };
+            if (work)
+            {
+                save(this, "main-running");
+                if (options_widget)
+                {
+                    options_widget->switch_to_protocols_tab();
+                    save(options_widget.get(), "options-protocols-running");
+                }
+                stop_tracker_();
+            }
             save(this, "main");
-            ui.pose_display->present(35, -12, 10, 0, 0, 0);
-            save(ui.pose_display, "head-a");
-            ui.pose_display->present(-60, 18, -15, 8, 4, -10);
-            save(ui.pose_display, "head-b");
-            ui.pose_display->present(150, 5, 0, 0, 0, 0);
-            save(ui.pose_display, "head-c");
-            ui.pose_display->present(0, 0, 0, 0, 0, 0);
+            // the mouse-emulation warning: tick the box, grab the dialog, cancel it
+            if (options_widget)
+                for (QCheckBox* cb : options_widget->findChildren<QCheckBox*>())
+                    if (cb->text().contains("mouse", Qt::CaseInsensitive) && !cb->isChecked())
+                    {
+                        QTimer::singleShot(400, this, [dir] {
+                            if (QWidget* w = QApplication::activeModalWidget())
+                            {
+                                w->grab().save(QDir(dir).filePath("mouse-warning.png"));
+                                w->close();
+                            }
+                        });
+                        cb->setChecked(true);
+                    }
+            // the pose preview in each state, plus large renders for checking the head model
+            {
+                using pw = pose_widget;
+                struct shot { const char* name; pw::tracking_state st; double yaw, pitch, roll, x, y, z; };
+                static const shot shots[] = {
+                    { "front",   pw::state_running,   0,   0,   0, 0, 0,   0 },
+                    { "threeq",  pw::state_running,  38, -10,   6, 0, 0,   0 },
+                    { "left",    pw::state_running, -72,  12, -14, 8, 4, -10 },
+                    { "profile", pw::state_running,  90,   0,   0, 0, 0,   0 },
+                    { "back",    pw::state_running, 155,   8,   0, 0, 0,   0 },
+                    { "up",      pw::state_running,  20,  40,   0, 0, 0,   0 },
+                    { "paused",  pw::state_paused,   25,  -8,   4, 0, 0,   0 },
+                    { "stopped", pw::state_stopped,   0,   0,   0, 0, 0,   0 },
+                };
+                pose_widget big;
+                big.setAttribute(Qt::WA_DontShowOnScreen);
+                big.resize(960, 720);
+                big.set_grid_background(true);
+                big.show();
+                for (const shot& sh : shots)
+                {
+                    for (pose_widget* w : { ui.pose_display, &big })
+                    {
+                        w->set_tracking_state(sh.st);
+                        w->present(sh.yaw, sh.pitch, sh.roll, sh.x, sh.y, sh.z);
+                    }
+                    save(ui.pose_display, (QByteArray("head-") + sh.name).constData());
+                    save(&big, (QByteArray("big-") + sh.name).constData());
+                }
+                ui.pose_display->set_tracking_state(pw::state_stopped);
+                ui.pose_display->present(0, 0, 0, 0, 0, 0);
+            }
+            if (options_widget)
+            {
+                options_widget->switch_to_protocols_tab();
+                save(options_widget.get(), "options-protocols");
+            }
             save(options_widget.get(), "options");
             save(mapping_widget.get(), "mapping");
             save(head_test_widget.get(), "headtest");
@@ -151,9 +208,6 @@ void main_window::init_dylibs()
         ui.iconcomboTrackerSource->addItem(x->icon, x->name, x->module_name);
 #endif
 
-    for (dylib_ptr& x : modules.protocols())
-        ui.iconcomboProtocol->addItem(x->icon, x->name, x->module_name);
-
 #ifndef UI_NO_FILTER_COMBOBOX
     for (dylib_ptr& x : modules.filters())
         ui.iconcomboFilter->addItem(x->icon, x->name, x->module_name);
@@ -163,9 +217,6 @@ void main_window::init_dylibs()
     connect(ui.iconcomboTrackerSource, &QComboBox::currentTextChanged,
             this, [this](const QString&) { pTrackerDialog = nullptr; if (options_widget) options_widget->tracker_module_changed(); });
 #endif
-
-    connect(ui.iconcomboProtocol, &QComboBox::currentTextChanged,
-            this, [this](const QString&) { pProtocolDialog = nullptr; if (options_widget) options_widget->proto_module_changed(); });
 
 #ifndef UI_NO_FILTER_COMBOBOX
     connect(ui.iconcomboFilter, &QComboBox::currentTextChanged,
@@ -184,6 +235,7 @@ void main_window::init_dylibs()
             this, &main_window::save_modules,
             Qt::DirectConnection);
 
+#if !defined UI_NO_TRACKER_COMBOBOX || !defined UI_NO_FILTER_COMBOBOX
     {
         struct list {
             dylib_list& libs;
@@ -195,7 +247,6 @@ void main_window::init_dylibs()
 #ifndef UI_NO_TRACKER_COMBOBOX
             { modules.trackers(), ui.iconcomboTrackerSource, m.tracker_dll },
 #endif
-            { modules.protocols(), ui.iconcomboProtocol, m.protocol_dll },
 #ifndef UI_NO_FILTER_COMBOBOX
             { modules.filters(), ui.iconcomboFilter, m.filter_dll },
 #endif
@@ -218,6 +269,7 @@ void main_window::init_dylibs()
                         });
         }
     }
+#endif
 }
 
 void main_window::init_profiles()
@@ -312,7 +364,6 @@ void main_window::init_buttons()
 #ifndef UI_NO_TRACKER_SETTINGS_BUTTON
     connect(ui.btnShowEngineControls, &QPushButton::clicked, this, &main_window::show_tracker_settings);
 #endif
-    connect(ui.btnShowServerControls, &QPushButton::clicked, this, &main_window::show_proto_settings);
 #ifndef UI_NO_FILTER_SETTINGS_BUTTON
     connect(ui.btnShowFilterControls, &QPushButton::clicked, this, &main_window::show_filter_settings);
 #endif
@@ -470,7 +521,6 @@ void main_window::update_button_state(bool running, bool inertialp)
     ui.iconcomboProfile->setEnabled(not_running);
     ui.btnStartTracker->setEnabled(not_running);
     ui.btnStopTracker->setEnabled(running);
-    ui.iconcomboProtocol->setEnabled(not_running);
 #ifndef UI_NO_FILTER_COMBOBOX
     ui.iconcomboFilter->setEnabled(not_running);
 #endif
@@ -526,7 +576,7 @@ void main_window::start_tracker_()
 #else
     auto* frame = &fake_video_frame;
 #endif
-    work = std::make_shared<Work>(pose, frame, current_tracker(), current_protocol(), current_filter());
+    work = std::make_shared<Work>(pose, frame, current_tracker(), enabled_protocols(), current_filter());
 
     if (!work->is_ok())
     {
@@ -545,16 +595,25 @@ void main_window::start_tracker_()
     if (pFilterDialog && work->libs.pFilter)
         pFilterDialog->register_filter(&*work->libs.pFilter);
 
-    if (pProtocolDialog)
-        pProtocolDialog->register_protocol(&*work->libs.pProtocol);
+    proto_errors.clear();
+    proto_status_known = true;
+    for (const auto& e : work->libs.protocols->entries())
+        if (!e.instance)
+            proto_errors[e.lib->module_name] = e.error;
+    for (auto& [name, dlg] : proto_dialogs)
+        if (dlg)
+            if (IProtocol* inst = work->libs.protocols->find(name))
+                dlg->register_protocol(inst);
 
     if (options_widget)
     {
         options_widget->register_tracker(&*work->libs.pTracker);
-        options_widget->register_protocol(&*work->libs.pProtocol);
         if (work->libs.pFilter)
             options_widget->register_filter(&*work->libs.pFilter);
+        options_widget->refresh_protocol_status();
     }
+
+    ui.pose_display->set_tracking_state(pose_widget::state_running);
 
     pose_update_timer.start(15);
 
@@ -579,20 +638,21 @@ void main_window::stop_tracker_()
     with_tracker_teardown sentinel;
 
     pose_update_timer.stop();
+    ui.pose_display->set_tracking_state(pose_widget::state_stopped);
     ui.pose_display->present(0,0,0, 0,0,0);
 
     if (options_widget)
     {
         options_widget->unregister_tracker();
         options_widget->unregister_filter();
-        options_widget->unregister_protocol();
     }
 
     if (pTrackerDialog)
         pTrackerDialog->unregister_tracker();
 
-    if (pProtocolDialog)
-        pProtocolDialog->unregister_protocol();
+    for (auto& [name, dlg] : proto_dialogs)
+        if (dlg)
+            dlg->unregister_protocol();
 
     if (pFilterDialog)
         pFilterDialog->unregister_filter();
@@ -606,6 +666,8 @@ void main_window::stop_tracker_()
 
     update_button_state(false, false);
     set_title();
+    if (options_widget)
+        options_widget->refresh_protocol_status();
     ui.btnStartTracker->setFocus();
 }
 
@@ -674,6 +736,8 @@ void main_window::show_pose()
 
     work->pipeline_.raw_and_mapped_pose(mapped, raw);
 
+    ui.pose_display->set_tracking_state(work->pipeline_.is_enabled() ? pose_widget::state_running
+                                                                     : pose_widget::state_paused);
     show_pose_(mapped, raw);
 }
 
@@ -808,11 +872,31 @@ void main_window::show_tracker_settings_(bool show)
                          &ITrackerDialog::register_tracker, &options_dialog::switch_to_tracker_tab);
 }
 
+// Trackhat: protocols are managed in Options > Protocols
 void main_window::show_proto_settings_(bool show)
 {
-    show_module_settings(work ? work->libs.pProtocol : nullptr, pProtocolDialog, current_protocol(),
-                         options_widget, this, show,
-                         &IProtocolDialog::register_protocol, &options_dialog::switch_to_proto_tab);
+    if (!show)
+        return;
+    show_options_dialog(true);
+    if (options_widget)
+        options_widget->switch_to_protocols_tab();
+}
+
+void main_window::show_protocol_dialog(const QString& module_name)
+{
+    auto [lib, idx] = module_by_name(module_name, modules.protocols());
+    if (!lib || !lib->Dialog)
+        return;
+    auto& dlg = proto_dialogs[module_name];
+    const bool fresh = !(dlg && dlg->isVisible());
+    if (fresh)
+    {
+        dlg = std::unique_ptr<IProtocolDialog>{(IProtocolDialog*)lib->Dialog()};
+        if (work && work->libs.protocols)
+            if (IProtocol* inst = work->libs.protocols->find(module_name))
+                dlg->register_protocol(inst);
+    }
+    show_window(*dlg, fresh);
 }
 
 void main_window::show_filter_settings_(bool show)
@@ -836,7 +920,6 @@ void main_window::show_options_dialog(bool show)
     if (embed)
     {
         show_tracker_settings_(false);
-        show_proto_settings_(false);
         show_filter_settings_(false);
     }
 
@@ -845,18 +928,34 @@ void main_window::show_options_dialog(bool show)
     std::unique_ptr<IProtocolDialog> empty_IPD;
     std::unique_ptr<IFilterDialog> empty_IFD;
 
+    options_dialog::protocol_hooks hooks;
+    hooks.protocols = modules.protocols();
+    hooks.show_settings = [this](const QString& name) { show_protocol_dialog(name); };
+    hooks.status = [this](const QString& name) {
+        options_dialog::protocol_status st;
+        if (!proto_status_known || !protocol_enabled(name))
+            return st;
+        if (auto it = proto_errors.find(name); it != proto_errors.end())
+        {
+            st.state = options_dialog::protocol_status::failed;
+            st.error = it->second;
+        }
+        else if (work)
+            st.state = options_dialog::protocol_status::active;
+        return st;
+    };
+
     mk_window(options_widget, false,
               embed ? pTrackerDialog : empty_ITD,
-              embed ? pProtocolDialog : empty_IPD,
+              empty_IPD,
               embed ? pFilterDialog : empty_IFD,
-              [this](bool flag) { set_keys_enabled(!flag); });
+              [this](bool flag) { set_keys_enabled(!flag); },
+              std::move(hooks));
 
     if (work)
     {
         if (work->libs.pTracker)
             options_widget->register_tracker(&*work->libs.pTracker);
-        if (work->libs.pProtocol)
-            options_widget->register_protocol(&*work->libs.pProtocol);
         if (work->libs.pFilter)
             options_widget->register_filter(&*work->libs.pFilter);
     }

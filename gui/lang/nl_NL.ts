@@ -432,6 +432,70 @@ Press &quot;clear calibration&quot; to remove any calibration data pertaining to
         <source>Extra rotation adjustment for reducing axis bleed on asymmetrically mounted cameras.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Head tracking is sent to every protocol ticked below at the same time, so most games and simulators work without choosing one.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Output protocols</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Changes take effect the next time tracking is started.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Protocols</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Active</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not available: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>With mouse emulation on, your head movement controls this computer&apos;s mouse cursor.
+
+As soon as tracking starts, the cursor follows your head. That can make it hard to click anything, including the Stop button.
+
+Before you continue, set keyboard shortcuts for pausing tracking (Toggle) and for stopping tracking in the Shortcuts tab, so you can always get the cursor back.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Toggle (pause)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You don&apos;t have a shortcut set yet for: %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mouse emulation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your head will move the mouse cursor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable mouse emulation</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>process_detector</name>

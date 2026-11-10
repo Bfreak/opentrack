@@ -58,8 +58,8 @@ std::unique_ptr<TrackLogger> Work::make_logger(main_settings &s)
 
 
 Work::Work(const Mappings& m, QFrame* frame,
-           const dylibptr& tracker, const dylibptr& filter, const dylibptr& proto) :
-    libs(frame, tracker, filter, proto),
+           const dylibptr& tracker, const std::vector<dylibptr>& protocols, const dylibptr& filter) :
+    libs(frame, tracker, protocols, filter),
     pipeline_{ m, libs, *logger }
 {
     if (!is_ok())

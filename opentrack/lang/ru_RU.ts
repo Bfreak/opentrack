@@ -134,10 +134,6 @@ Exiting now.</source>
         <translation>Остановить</translation>
     </message>
     <message>
-        <source>Output</source>
-        <translation>Выходной интерфейс</translation>
-    </message>
-    <message>
         <source>Running as root is bad</source>
         <translation type="unfinished"></translation>
     </message>
@@ -171,6 +167,14 @@ Exiting now.</source>
     </message>
     <message>
         <source>Test head tracking</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create a new profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>+</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

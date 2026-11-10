@@ -46,6 +46,8 @@ QPushButton:default { border-color: #8B5CF6; }
 #btnStartTracker:disabled { background: #241F35; border-color: #241F35; color: #6E6886; }
 #btnStopTracker:enabled { border-color: #8B5CF6; color: #C4B5FD; }
 #btnHeadTest { border-color: #4C3D7A; color: #C4B5FD; }
+#profile_button { font-size: 15pt; font-weight: 700; color: #C4B5FD; padding: 0px 11px 3px 11px; }
+#profile_button::menu-indicator { image: none; width: 0; height: 0; }
 #btnHeadTest:hover { border-color: #8B5CF6; }
 
 QComboBox { background: #1E1E27; border: 1px solid #2E2E3A; border-radius: 8px; padding: 4px 8px; }

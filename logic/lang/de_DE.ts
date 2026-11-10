@@ -27,16 +27,6 @@
         <translation>Fehler beim Laden der Bibliothek</translation>
     </message>
     <message>
-        <source>Error occurred while loading protocol %1
-
-%2
-</source>
-        <translation>Ein Fehler trat auf beim Laden des Protokolls %1
-
-%2
-</translation>
-    </message>
-    <message>
         <source>Error occurred while loading filter %1
 
 %2

@@ -27,13 +27,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Error occurred while loading protocol %1
-
-%2
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Error occurred while loading filter %1
 
 %2

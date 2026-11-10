@@ -6,7 +6,11 @@
 #include "input/shortcuts.h"
 #include "logic/main-settings.hpp"
 
+#include "api/plugin-support.hpp"
+
 #include <functional>
+#include <memory>
+#include <vector>
 
 #include <QObject>
 #include <QDialog>
@@ -18,10 +22,26 @@ class OTR_GUI_EXPORT options_dialog final : public QDialog
 signals:
     void closing();
 public:
+    // Trackhat: the Protocols tab (which output protocols are on, their settings and status)
+    struct protocol_status
+    {
+        enum { unknown, active, failed } state = unknown;
+        QString error;
+    };
+    struct protocol_hooks
+    {
+        std::vector<std::shared_ptr<dylib>> protocols;
+        std::function<void(const QString& module_name)> show_settings;
+        std::function<protocol_status(const QString& module_name)> status;
+    };
+
     options_dialog(std::unique_ptr<ITrackerDialog>& tracker_dialog_,
                    std::unique_ptr<IProtocolDialog>& proto_dialog_,
                    std::unique_ptr<IFilterDialog>& filter_dialog_,
-                   std::function<void(bool)> pause_keybindings);
+                   std::function<void(bool)> pause_keybindings,
+                   protocol_hooks protocols = {});
+    void switch_to_protocols_tab();
+    void refresh_protocol_status();
     ~options_dialog() override;
     inline bool embeddable() noexcept { return false; }
     void switch_to_tracker_tab();
@@ -41,6 +61,21 @@ public:
 private:
     void closeEvent(QCloseEvent*) override;
     static QString kopts_to_string(const key_opts& opts);
+
+    void init_protocols_tab();
+    void sync_protocol_checkboxes();
+    bool confirm_mouse_emulation();
+
+    struct protocol_row
+    {
+        QString module_name;
+        class QCheckBox* enabled = nullptr;
+        QLabel* status = nullptr;
+    };
+    protocol_hooks proto_hooks;
+    std::vector<protocol_row> proto_rows;
+    QWidget* protocols_tab = nullptr;
+    main_settings_impl::module_settings mods;
 
     main_settings main;
     std::function<void(bool)> pause_keybindings;

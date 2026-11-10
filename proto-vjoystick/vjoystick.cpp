@@ -136,30 +136,10 @@ module_status vjoystick::initialize()
         }
     }
 
+    // Trackhat: this protocol is on by default, so no modal error box when the driver is missing;
+    // the reason is shown in Options > Protocols instead.
     if (!status)
-    {
-        QMessageBox msgbox;
-        msgbox.setIcon(QMessageBox::Critical);
-        msgbox.setText(tr("vjoystick driver problem"));
-        msgbox.setInformativeText(msg);
-
-        QPushButton* driver_button = msgbox.addButton(tr("Download the driver"), QMessageBox::ActionRole);
-        QPushButton* project_site_button = msgbox.addButton(tr("Visit project site"), QMessageBox::ActionRole);
-        msgbox.addButton(QMessageBox::Close);
-
-        (void) msgbox.exec();
-
-        if (msgbox.clickedButton() == driver_button)
-        {
-            static const char* download_driver_url = "https://sourceforge.net/projects/vjoystick/files/latest/download";
-            QDesktopServices::openUrl(QUrl(download_driver_url, QUrl::StrictMode));
-        }
-        else if (msgbox.clickedButton() == project_site_button)
-        {
-            static const char* project_site_url = "http://vjoystick.sourceforge.net/site/";
-            QDesktopServices::openUrl(QUrl(project_site_url, QUrl::StrictMode));
-        }
-    }
+        return error(msg);
 
     if (!status)
         return error(tr("Driver problem."));

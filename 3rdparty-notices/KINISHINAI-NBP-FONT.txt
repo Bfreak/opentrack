@@ -1,0 +1,4 @@
+Kinishinai NBP font, Copyright Nate Halley 2012.
+Licensed under Creative Commons Attribution-ShareAlike 3.0 (http://creativecommons.org/licenses/by-sa/3.0/).
+Source: https://www.fontspace.com/kinishinai-nbp-font-f14639
+Used unmodified for the "tracking stopped" text in the pose preview.
