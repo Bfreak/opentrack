@@ -56,6 +56,11 @@ The owner can't compile, so builds/tests are done by Claude.
     **Not checked: an actual game receiving data with several protocols on at once, vJoy/OSC (CI build only), pause colours live.**
   - Installer file is now named `<version>-win64-setup.exe`.
 - **Release wrap-up** (2026-11-10): `trackhat-head-test` and `trackhat-ui-theme` are merged into `trackhat-2026.1` (fast-forward).
+  Tagged **`trackhat-opentrack-3.3`** at `abb0eb8e`; CI: https://github.com/Bfreak/opentrack/actions/runs/42810744050.
+  Installer `trackhat-opentrack-3.3-win64-setup.exe` (165 MB, sha256 `25d9399d...4903`), also saved on the owner's PC in
+  `Documents/TrackHatOpentrackProject/release/`. It is unsigned (SmartScreen warning). Not yet installed or run by anyone.
+  Still to do by the owner to publish: test it, upload it, then set the website line to `SOFTWARE-UPDATE-V3: trackhat-opentrack-3.3`.
+  If a fix is needed before publishing, fix on `trackhat-2026.1` and either move the tag or tag `trackhat-opentrack-3.3.1`.
 
 ## Blocked / pending
 1. **Owner testing of the 3.3 installer in real games**: camera detection, exposure presets, tracking, update popup,
