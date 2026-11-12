@@ -27,6 +27,12 @@ Trackhat features are carried over, with upstream's improvements since then.
   paused, and "tracking stopped" is shown when tracking is off.
 - The profile button shows a plus for creating profiles.
 
+- Changing **Camera override** while tracking switches camera straight away; no need to stop tracking.
+- The TrackHat sensor is the first, default entry of the camera list whenever it is plugged in.
+- New exposure preset **Auto** (the camera's own auto exposure), the default for new profiles.
+- Pose preview: smaller head and reticle, slightly see-through.
+- While tracking, the Profile box says "(Stop tracking to change profile)". The window title is "TrackHat Opentrack".
+
 ## Unchanged from 3.2
 - Compact UI, Trackhat branding/icons, 320x240 preview, 30 Hz UI refresh, Trackhat window title.
 - Neural-net tracker and accela filter forced; selectors hidden.

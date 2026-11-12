@@ -55,6 +55,22 @@ using vec2 = vec<2>;
 using vec3 = vec<3>;
 using mat33 = mat<3, 3>;
 
+// TrackHat: camera override list. The first entry is the default camera: the sensor when it is
+// connected, otherwise this placeholder (stored as-is in the profile, so it is not translated).
+constexpr const char* trackhat_sensor_name = "TrackHat sensor";
+constexpr const char* default_camera_name = "Default (first camera)";
+
+static bool is_default_camera_name(const QString& name)
+{
+    return name.isEmpty() || name == QLatin1String(default_camera_name) || name == QLatin1String(trackhat_sensor_name);
+}
+
+// All the default names pick the same camera, so switching between them needs no reopen.
+static bool same_camera(const QString& a, const QString& b)
+{
+    return a == b || (is_default_camera_name(a) && is_default_camera_name(b));
+}
+
 #if defined(_WIN32)
 std::wstring convert(const QString& s)
 {
@@ -622,30 +638,31 @@ bool NeuralNetTracker::open_camera()
 
     camera_ = nullptr;
     const QString name = settings_.camera_name;
+    opened_camera_name_ = name;
 
-    // Empty name (default) or the explicit sensor name: use the TrackHat sensor.
-    if (name.isEmpty() || name == QStringLiteral("TrackHat sensor"))
-    {
-        camera_ = video::make_camera_(QStringLiteral("TrackHat sensor"));
-        if (camera_ && camera_->start(args))
+    auto try_open = [&](std::unique_ptr<video::impl::camera> cam) {
+        if (cam && cam->start(args))
+        {
+            camera_ = std::move(cam);
             return true;
-        // Default selection with no sensor attached falls through to the generic lookup.
-        if (!name.isEmpty())
-            return false;
-    }
-
-    camera_ = video::make_camera(name);
-
-    if (!camera_)
+        }
         return false;
+    };
 
-    if (!camera_->start(args))
-    {
-        qDebug() << "neuralnet tracker: can't open camera";
-        return false;
-    }
+    // The default entry (empty, "Default (first camera)" or the sensor's own name) and any
+    // camera that is no longer connected use the TrackHat sensor when it is present.
+    if (!is_default_camera_name(name) && try_open(video::make_camera_(name)))
+        return true;
 
-    return true;
+    if (try_open(video::make_camera_(QString(trackhat_sensor_name))))
+        return true;
+
+    // No sensor: the first camera that opens.
+    if (try_open(video::make_camera(name)))
+        return true;
+
+    qDebug() << "neuralnet tracker: can't open camera" << name;
+    return false;
 }
 
 void NeuralNetTracker::run()
@@ -659,6 +676,20 @@ void NeuralNetTracker::run()
     while (!isInterruptionRequested())
     {
         is_visible_ = check_is_visible();
+
+        // Camera override changed while tracking: switch to the new camera straight away.
+        // A failed open leaves camera_ empty and is retried on the next pass.
+        if (!same_camera(*settings_.camera_name, opened_camera_name_) || !camera_)
+        {
+            if (!open_camera())
+            {
+                portable::sleep(1000);
+                continue;
+            }
+            last_localizer_roi_.reset();
+            last_roi_.reset();
+        }
+
         auto t = clk.now();
         {
             QMutexLocker l(&camera_mtx_);
@@ -808,10 +839,21 @@ NeuralNetDialog::NeuralNetDialog() : trans_calib_(1, 2)
     // TrackHat: the advanced tuning/debug options are not exposed.
     ui_.tuningOptionsBox->setVisible(false);
 
-    // Empty entry = default (the TrackHat sensor).
-    ui_.cameraName->addItem(QString{});
-    for (const auto& str : video::camera_names())
-        ui_.cameraName->addItem(str);
+    // The first entry is the default camera: the TrackHat sensor when connected, otherwise the
+    // first camera found. A stored empty name (older profiles) selects that first entry.
+    {
+        const auto names = video::camera_names();
+        const QString sensor = QString(trackhat_sensor_name);
+        const bool have_sensor = std::find(names.cbegin(), names.cend(), sensor) != names.cend();
+
+        ui_.cameraName->addItem(have_sensor ? sensor : QString(default_camera_name));
+        for (const auto& str : names)
+            if (str != sensor)
+                ui_.cameraName->addItem(str);
+
+        if (is_default_camera_name(settings_.camera_name))
+            settings_.camera_name = ui_.cameraName->itemText(0);
+    }
 
     tie_setting(settings_.camera_name, ui_.cameraName);
     tie_setting(settings_.offset_fwd, ui_.tx_spin);
@@ -825,6 +867,7 @@ NeuralNetDialog::NeuralNetDialog() : trans_calib_(1, 2)
             QString label;
             exposure_preset preset;
         } presets[] = {
+            { tr("Auto"), exposure_preset::automatic },
             { tr("Near (1-3ft)"), exposure_preset::range_near },
             { tr("Medium (3-6ft)"), exposure_preset::range_medium },
             { tr("Far (6+ft)"), exposure_preset::range_far },
@@ -882,7 +925,8 @@ void NeuralNetDialog::camera_settings()
     if (tracker_)
     {
         QMutexLocker l(&tracker_->camera_mtx_);
-        (void)tracker_->camera_->show_dialog();
+        if (tracker_->camera_)
+            (void)tracker_->camera_->show_dialog();
     }
     else
         (void)video::show_dialog(settings_.camera_name);

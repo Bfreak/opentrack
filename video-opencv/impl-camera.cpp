@@ -48,6 +48,32 @@ void cam::set_exposure(exposure_preset e)
     using enum exposure_preset;
     default:
         break;
+    case automatic: {
+        // DirectShow turns auto exposure on for 1; V4L2 uses 3 (aperture priority).
+#ifdef _WIN32
+        constexpr int auto_on = 1;
+#else
+        constexpr int auto_on = 3;
+#endif
+        constexpr struct {
+            int prop, value;
+        } props[] = {
+            { cv::CAP_PROP_BRIGHTNESS,      0 },
+            { cv::CAP_PROP_SHARPNESS,       3 },
+            { cv::CAP_PROP_CONTRAST,       32 },
+            { cv::CAP_PROP_HUE,             0 },
+            { cv::CAP_PROP_SATURATION,      0 },
+            { cv::CAP_PROP_GAMMA,         100 },
+            { cv::CAP_PROP_BACKLIGHT,       1 },
+            { cv::CAP_PROP_GAIN,            0 },
+        };
+        for (const auto [prop, value] : props)
+            cap->set(prop, value);
+        const bool ok = cap->set(cv::CAP_PROP_AUTO_EXPOSURE, auto_on);
+        qDebug() << "auto exposure" << (ok ? "on" : "not supported by camera")
+                 << "readback" << cap->get(cv::CAP_PROP_AUTO_EXPOSURE);
+        break;
+    }
     case range_near:
     case range_medium:
     case range_far: {

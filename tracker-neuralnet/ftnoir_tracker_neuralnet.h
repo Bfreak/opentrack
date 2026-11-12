@@ -165,6 +165,8 @@ private:
     QString get_posenet_filename() const;
 
     Settings settings_;
+    // Camera name the open camera was chosen for; run() reopens the camera when the setting changes.
+    QString opened_camera_name_;
 
     // CAUTION: destruction order matters here. The env and allocator must
     // live longer than the ORT sessions. It looked like they were reference

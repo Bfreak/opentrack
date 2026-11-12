@@ -25,23 +25,21 @@ The owner (James) is not a C++ developer: Claude builds, tests and hands back so
 - **Workflow:** from 2026-11-12 the owner works in **VS Code** (Claude Code extension). Tasks are in `.vscode/tasks.json`
   (Terminal > Run Task): build, run, UI self-test, scene screenshots, CI status.
 
-## Open requests from the owner (2026-11-11) - NOT STARTED
-The owner listed these as bugs/issues, adding that some may be misunderstandings of the current configuration.
-The request was interrupted before any work or investigation, so check current behaviour first.
-1. **Camera should change immediately** when selected in the tracker's camera list, even while tracking is running.
-   Start at `tracker-neuralnet/ftnoir_tracker_neuralnet.cpp`: `settings_.camera_name` is read when the camera is opened
-   (around line 624) and tied to `ui_.cameraName` (around line 816).
-2. **A detected TrackHat sensor should always be the default camera.** Today an empty name or "TrackHat sensor" selects it
-   (same file, around line 627); check what happens when the sensor is absent, or present under another name or index.
-3. **New exposure preset "Auto", as the default**, which sets the camera's exposure to automatic.
-   Presets are `exposure_preset` in `video-opencv/settings.hpp` (keep the existing numeric values: profiles depend on them),
-   applied in `video-opencv/impl-camera.cpp` `cam::set_exposure`, listed in the tracker dialog (around line 826).
-   Enumerator names must not be `near`/`far` (Windows macros).
-4. **Pose preview:** make the head and the reticle about **60% of their current size**, and **80% opaque**.
-   In `pose-widget/pose-widget.cpp` `paintEvent`: `unit = height() * .21f`, reticle radius `unit * 1.50f`; the head layer is
-   drawn with `p.drawImage(rect(), layer)` and the reticle in `draw_reticle`.
-
-After these: rebuild, check with the self-test, then decide with the owner whether to move the `3.3` tag or tag `3.3.1`.
+## Owner's fixes of 2026-11-11/12 - DONE, NOT COMMITTED
+Built locally and checked with the self-test (see "Verified"). Not committed, pushed or tagged yet: next, decide with the
+owner whether to move the `3.3` tag or tag `3.3.1`.
+1. **Camera override takes effect while tracking** (`tracker-neuralnet/ftnoir_tracker_neuralnet.cpp` `run()`): the tracker
+   thread compares the setting with the camera it opened and reopens the camera when it changes. Tracking is not
+   restarted (owner's choice). The tracker is forced to neuralnet, so "changing the tracker" means changing this camera.
+2. **Sensor is the default camera**: when "TrackHat sensor" is detected it is the first entry of the Camera override list;
+   otherwise the first entry is `Default (first camera)`. Empty, `Default (first camera)` and `TrackHat sensor` all mean
+   "sensor, else first camera"; a saved camera that is missing also falls back to the sensor.
+3. **Exposure preset "Auto"** (`exposure_preset::automatic` = 4, the new `DEFAULT`; listed first): same TrackHat image
+   settings, with `CAP_PROP_AUTO_EXPOSURE` 1 (DirectShow) / 3 (V4L2). Profiles that saved a preset keep it; the owner's
+   `default.ini` has `exposure-preset=3` (Medium).
+4. **Pose preview**: head, crosshair and reticle at 60% size (`head_scale`), on-screen travel unchanged; drawn at 80% opacity.
+5. **Profile box** reads "Profile (Stop tracking to change profile)" while tracking.
+6. **Window title** is always "TrackHat Opentrack".
 
 ## What 3.3 contains (all merged)
 - **Port:** 2026.1.0 + 3-way merge of `trackhat-sensor-v2` + cherry-picked upstream fixes. See `PORTING-NOTES.md`.
@@ -67,7 +65,18 @@ After these: rebuild, check with the self-test, then decide with the owner wheth
   - `OPENTRACK_UI_SNAPSHOT=<dir>` saves the main, Options, Protocols, Mapping and test windows, the mouse warning, and the
     pose preview in every state (`head-*.png` at real size, `big-*.png` enlarged), then quits.
   - Add `OPENTRACK_UI_SNAPSHOT_START=1` to start tracking for 3 s first (needs the sensor).
+  - It also saves `options-tracker.png` and the window title in `title.txt`.
+  - Add `OPENTRACK_UI_SNAPSHOT_SWAP_CAMERA=<part of a camera name>` (with `_START`) to switch the camera override to that
+    camera and back while tracking (`swap-*.png`, `swap.txt`; takes about 40 s).
   - `OPENTRACK_HEAD_TEST_SNAPSHOT=<dir>` renders each test scene from six poses and writes frame times to `log.txt`.
+  - This build drops `qDebug` output; to trace the tracker, write to a file temporarily.
+- 2026-11-12, owner's fixes, with the real sensor: title "TrackHat Opentrack"; Profile title suffix while tracking; smaller
+  translucent head; camera list starts with "TrackHat sensor". A temporary trace showed the camera swap working while
+  tracking: sensor -> LifeCam Studio (frames flowed) -> sensor (back at ~60 fps). **Each camera open takes about 8 s**
+  inside `cam->start` (DirectShow); the sensor took as long at tracking start before this change. During a swap the
+  UI stays responsive but there is no pose.
+  `CAP_PROP_AUTO_EXPOSURE`=1 through DirectShow brightened two 640x480 cameras (idx 0, 2) from a dark manual exposure
+  (checked with Python OpenCV 5.0, not the app's 4.10); a third camera didn't support it.
 - 2026-11-10 self-test with the real sensor: tracking started, the head followed the live pose; FlightGear, freetrack
   and UDP "Active", SimConnect "Not available: Install FSX/Prepar3D SimConnect SDK", mouse "Off"; the warning appeared.
 - The owner ran the first version of the test window with live tracking: "works beautifully" (before the scene upgrade).
@@ -77,7 +86,10 @@ After these: rebuild, check with the self-test, then decide with the owner wheth
 - No **game** has been tried with several protocols on at once. vJoy and OSC only compile (CI); never run.
 - The red paused markers were only seen in a rendered frame, not while pausing live.
 - The upgraded test scenes, the Midnight theme and the final head have not been confirmed by the owner in the running app.
-- Exposure presets on real hardware; tracking quality of `head-pose-0.5-small` vs `0.2-small`.
+- Exposure presets on real hardware, including Auto inside the app; tracking quality of `head-pose-0.5-small` vs `0.2-small`.
+- The camera swap was not watched in the video preview (the Options window covers the main window during the self-test,
+  so the preview isn't updated); the owner hasn't tried it.
+- The camera list without the sensor plugged in ("Default (first camera)").
 - Performance of the test window on integrated graphics; machines without OpenGL 3.3; the Linux build of the new modules.
 
 ## Known rough edges (noticed, not fixed)
@@ -99,4 +111,4 @@ After these: rebuild, check with the self-test, then decide with the owner wheth
   test window built and upgraded; Midnight theme chosen.
 - 2026-11-10: all-protocols output, Protocols tab, new pose preview; merged; tagged `3.3`; installer built.
 - 2026-11-11: owner listed four fixes (above); interrupted before work started.
-- 2026-11-12: status rewritten; VS Code workflow set up.
+- 2026-11-12: status rewritten; VS Code workflow set up. Owner's seven fixes done (above), built and self-tested; not committed.

@@ -19,8 +19,9 @@ and hand back something runnable. Prefer finished, tested artifacts over explana
   (settings dir: `~/.config/trackhat-v3` on Linux, `Documents\trackhat-v3` on Windows).
   Upstream removed the old `variant/` mechanism; this file replaces it.
 - `opentrack/defs.hpp`: `UI_FORCED_TRACKER "neuralnet"`, `UI_FORCED_FILTER "accela"`, `UI_NO_*`, `UI_COMPACT_VIDEO_FEED`.
-- `tracker-neuralnet/`: fixed 60 deg FOV, fixed 640x480@60 MJPEG, prefers camera named "TrackHat sensor",
-  exposure presets (Near/Medium/Far/Custom), advanced options hidden, defaults: forward offset 200 mm,
+- `tracker-neuralnet/`: fixed 60 deg FOV, fixed 640x480@60 MJPEG, prefers camera named "TrackHat sensor" (first list
+  entry; reopened live when the override changes), exposure presets (Auto/Near/Medium/Far/Custom, Auto = 4 is the default),
+  advanced options hidden, defaults: forward offset 200 mm,
   1 ONNX thread, model `head-pose-0.5-small.onnx` (0.2-small still shipped).
 - `video-opencv/`: exposure presets, DirectShow camera settings; `compat/camera-names.cpp`: no device path appended to DShow names.
 - `opentrack/software-update-dialog.cpp`: checks trackhat.org for `SOFTWARE-UPDATE-V3: <version>`.
@@ -54,6 +55,8 @@ and hand back something runnable. Prefer finished, tested artifacts over explana
   `OPENTRACK_HEAD_TEST_SNAPSHOT=<dir>` and look at the PNGs.
 - To check any UI change, run with `OPENTRACK_UI_SNAPSHOT=<dir>` (add `OPENTRACK_UI_SNAPSHOT_START=1` to start
   tracking for 3 s with the sensor) and look at the PNGs. You can't see the app otherwise.
+  `OPENTRACK_UI_SNAPSHOT_SWAP_CAMERA=<name part>` also switches the camera while tracking. `qDebug` output is not
+  visible in this build; `start_tracker_()` blocks the UI for ~8 s while the sensor opens, so schedule test steps after it.
 - The local build has no vJoy and no OSC; a change that touches them needs a CI run.
 
 ## VS Code workflow (from 2026-11-12)

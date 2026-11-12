@@ -25,14 +25,18 @@
 #include "head-test/head-test-window.hpp"
 
 #include <cstring>
+#include <functional>
+#include <memory>
 #include <utility>
 
 #include <QMessageBox>
 #include <QDesktopServices>
 #include <QApplication>
 
+#include <QComboBox>
 #include <QFile>
 #include <QFileInfo>
+#include <QTextStream>
 #include <QDir>
 #include <QDateTime>
 
@@ -79,20 +83,92 @@ main_window::main_window() : State(OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH)
     // OPENTRACK_UI_SNAPSHOT=<dir> saves the main, Options, Mapping and test windows, then quits.
     if (const QString dir = qEnvironmentVariable("OPENTRACK_UI_SNAPSHOT"); !dir.isEmpty())
     {
-        QTimer::singleShot(500, this, [this] {
+        // OPENTRACK_UI_SNAPSHOT_SWAP_CAMERA=<part of a camera name> (with _START): while tracking, show the video
+        // preview, switch the camera override to that camera (or the second entry) and back, and save the main
+        // window and the tracker tab each time (swap-*.png, swap.txt). Camera opens can take several seconds.
+        const QString swap_to = qEnvironmentVariable("OPENTRACK_UI_SNAPSHOT_SWAP_CAMERA");
+        const bool swap_test = !swap_to.isEmpty() && qEnvironmentVariableIsSet("OPENTRACK_UI_SNAPSHOT_START");
+        auto finish = std::make_shared<std::function<void()>>();
+        std::function<void()> swap_steps;
+        if (swap_test)
+        {
+            auto camera_combo = [this]() -> QComboBox* {
+                return options_widget ? options_widget->findChild<QComboBox*>(QStringLiteral("cameraName")) : nullptr;
+            };
+            auto shoot = [this, dir](const char* name) {
+                QDir().mkpath(dir);
+                if (work)
+                    ui.preview_checkbox->setChecked(true);
+                grab().save(QDir(dir).filePath(QString::fromLatin1(name) + "-main.png"));
+                if (options_widget)
+                {
+                    options_widget->switch_to_tracker_tab();
+                    options_widget->grab().save(QDir(dir).filePath(QString::fromLatin1(name) + "-tracker.png"));
+                }
+                QFile f(QDir(dir).filePath("swap.txt"));
+                if (f.open(QFile::Append | QFile::Text))
+                    QTextStream(&f) << name << ": preview " << ui.preview_checkbox->isChecked()
+                                    << ", video frame " << (ui.video_frame->layout() != nullptr) << "\n";
+            };
+            auto switch_away = [dir, swap_to, camera_combo, shoot] {
+                shoot("swap-0-default");
+                QFile f(QDir(dir).filePath("swap.txt"));
+                if (!f.open(QFile::Append | QFile::Text))
+                    return;
+                QTextStream out(&f);
+                QComboBox* cb = camera_combo();
+                if (!cb)
+                {
+                    out << "camera list not found\n";
+                    return;
+                }
+                int target = cb->count() > 1 ? 1 : 0;
+                for (int i = 0; i < cb->count(); i++)
+                {
+                    out << i << ": " << cb->itemText(i) << "\n";
+                    if (i > 0 && cb->itemText(i).contains(swap_to, Qt::CaseInsensitive))
+                        target = i;
+                }
+                cb->setCurrentIndex(target);
+                out << "switched to: " << cb->currentText() << "\n";
+            };
+            auto switch_back = [camera_combo, shoot] {
+                shoot("swap-1-other");
+                if (QComboBox* cb = camera_combo())
+                    cb->setCurrentIndex(0);
+            };
+            // scheduled once tracking has started (start_tracker_ blocks while the camera opens)
+            swap_steps = [this, switch_away, switch_back, shoot, finish] {
+                QTimer::singleShot(3000, this, switch_away);
+                QTimer::singleShot(15000, this, switch_back);
+                QTimer::singleShot(35000, this, [shoot, finish] { shoot("swap-2-back"); (*finish)(); });
+            };
+        }
+        QTimer::singleShot(500, this, [this, swap_steps] {
             // OPENTRACK_UI_SNAPSHOT_START=1 also starts tracking for a few seconds (needs the camera)
             if (qEnvironmentVariableIsSet("OPENTRACK_UI_SNAPSHOT_START"))
                 start_tracker_();
             show_options_dialog(true);
             show_mapping_window();
             show_head_test_window();
+            if (swap_steps)
+                swap_steps();
         });
-        QTimer::singleShot(3500, this, [this, dir] {
+        if (!swap_test)
+            QTimer::singleShot(3500, this, [finish] { (*finish)(); });
+        *finish = [this, dir] {
             QDir().mkpath(dir);
             auto save = [&](QWidget* w, const char* name) {
                 if (w)
                     w->grab().save(QDir(dir).filePath(QString::fromLatin1(name) + ".png"));
             };
+            if (QFile f(QDir(dir).filePath("title.txt")); f.open(QFile::WriteOnly | QFile::Text))
+                f.write(windowTitle().toUtf8() + "\n");
+            if (options_widget)
+            {
+                options_widget->switch_to_tracker_tab();
+                save(options_widget.get(), "options-tracker");
+            }
             if (work)
             {
                 save(this, "main-running");
@@ -159,7 +235,7 @@ main_window::main_window() : State(OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH)
             save(mapping_widget.get(), "mapping");
             save(head_test_widget.get(), "headtest");
             QApplication::exit(0);
-        });
+        };
     }
 
     connect(&pose_update_timer, &QTimer::timeout,
@@ -528,6 +604,7 @@ void main_window::update_button_state(bool running, bool inertialp)
     ui.iconcomboTrackerSource->setEnabled(not_running);
 #endif
     ui.profile_button->setEnabled(not_running);
+    ui.groupProfile->setTitle(running ? tr("Profile (Stop tracking to change profile)") : tr("Profile"));
 #ifdef UI_COMPACT_VIDEO_FEED
     ui.preview_checkbox->setChecked(false);
     ui.preview_checkbox->raise();
@@ -709,17 +786,11 @@ void main_window::show_pose_(const double* mapped, const double* raw)
 
 void main_window::set_title(const QString& game_title)
 {
-    static const QString version{opentrack_version};
-    static const QString sep { tr(" :: ") };
-    static const QString pat1{ version + sep + "%1" + sep + "%2" };
-    static const QString pat2{ version + sep + "%1" };
-
-    const QString current = ini_filename();
-
-    if (game_title.isEmpty())
-        setWindowTitle(pat2.arg(current));
-    else
-        setWindowTitle(pat1.arg(current, game_title));
+    // TrackHat: fixed title, without version, profile or game name.
+    (void)game_title;
+    static const QString title = QStringLiteral("TrackHat Opentrack");
+    if (windowTitle() != title)
+        setWindowTitle(title);
 }
 
 void main_window::show_pose()

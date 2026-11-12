@@ -6,7 +6,8 @@ using namespace options;
 // Enumerators avoid the names `near`/`far`, which <windows.h> defines as macros.
 enum class exposure_preset : int {
     range_near, range_far, ignored, range_medium,
-    DEFAULT = range_medium,
+    automatic, // the camera's own auto exposure
+    DEFAULT = automatic,
 };
 
 struct dshow_camera_settings final {

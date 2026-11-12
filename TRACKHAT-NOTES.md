@@ -31,6 +31,9 @@ The branch was merged (real 3-way merge, history preserved) into the 2026.1.0 re
 - Output goes to every enabled protocol at once (`logic/multi-protocol.*`, Options > Protocols); upstream sends to one
   chosen protocol. Mouse emulation is off by default and warns when enabled.
 - Midnight theme, mannequin-head pose preview with crosshair and reticle, "tracking stopped" in Kinishinai NBP.
+- Neuralnet tracker reopens the camera when Camera override changes while tracking; the sensor is the list's default
+  entry ("Default (first camera)" without it). Exposure preset Auto (`exposure_preset::automatic` = 4, the default).
+  Fixed window title "TrackHat Opentrack"; Profile box title notes that tracking must stop to change profile.
 - Head-tracking test window (`head-test/`, new in the 2026.1 port): 3D cockpit / race car / soldier scenes
   driven by the mapped pose, opened from the main window. See `docs/trackhat/HEAD-TEST.md`.
 - CI: `.github/workflows/trackhat-windows.yml` (MSVC build, installer, portable zip); upstream's

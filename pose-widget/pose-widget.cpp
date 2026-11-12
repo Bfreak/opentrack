@@ -450,8 +450,12 @@ void pose_widget::paintEvent(QPaintEvent*)
     rot.rotate(float(-pitch), 1, 0, 0);
     rot.rotate(float(mirrored ? roll : -roll), 0, 0, 1);
 
-    const float unit = height() * .21f * std::exp(-float(z) * Kz / XYZmax);
-    const float head_px = 2.2f * unit;
+    // move_unit sets how far the head travels on screen per cm; unit sets the size of the head,
+    // crosshair and reticle (60% of the original size, the travel is unchanged).
+    constexpr float head_scale = .6f;
+    const float move_unit = height() * .21f * std::exp(-float(z) * Kz / XYZmax);
+    const float unit = move_unit * head_scale;
+    const float head_px = 2.2f * move_unit;
     const QPointF centre(width() * .5 + (mirrored ? x : -x) / XYZmax * head_px,
                          height() * .5 - y / XYZmax * head_px);
     constexpr float cam = 7;  // mild perspective
@@ -565,6 +569,8 @@ void pose_widget::paintEvent(QPaintEvent*)
         }
     }
 
+    // head, crosshair and reticle are drawn slightly see-through
+    p.setOpacity(.8);
     p.setRenderHint(QPainter::SmoothPixmapTransform, true);
     p.drawImage(rect(), layer);
 
@@ -580,6 +586,7 @@ void pose_widget::paintEvent(QPaintEvent*)
         reticle_centre += (centre - reticle_centre) * follow;
     }
     draw_reticle(p, reticle_centre, unit * 1.50f);
+    p.setOpacity(1);
 }
 
 } // ns pose_widget_impl
