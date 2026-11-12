@@ -52,6 +52,19 @@ and hand back something runnable. Prefer finished, tested artifacts over explana
   see `docs/trackhat/WINDOWS-LOCAL-BUILD.md`). Use it to iterate; use CI for what users get.
 - Head-tracking test window: `docs/trackhat/HEAD-TEST.md`. To check scenes visually, run with
   `OPENTRACK_HEAD_TEST_SNAPSHOT=<dir>` and look at the PNGs.
+- To check any UI change, run with `OPENTRACK_UI_SNAPSHOT=<dir>` (add `OPENTRACK_UI_SNAPSHOT_START=1` to start
+  tracking for 3 s with the sensor) and look at the PNGs. You can't see the app otherwise.
+- The local build has no vJoy and no OSC; a change that touches them needs a CI run.
+
+## VS Code workflow (from 2026-11-12)
+- The owner works in VS Code with the Claude Code extension, in this repo folder.
+- `.vscode/tasks.json` has the tasks (Terminal > Run Task; Ctrl+Shift+B builds): Build, Reconfigure and build, Run,
+  Build and run, UI screenshots (self-test), UI screenshots with live tracking, Test-scene screenshots, CI status.
+  Screenshots land in `../build-local/snapshots/`.
+- `.vscode/settings.json` points IntelliSense at `../build-local/compile_commands.json`. CMake Tools is not used:
+  it would configure its own build folder.
+- Don't use shell heredocs to write files with backslashes or `\n` escapes (they get mangled on this PC); use the
+  Write/Edit tools or a script file.
 
 ## Windows builds now come from CI
 - Push to `fork` (https://github.com/Bfreak/opentrack), branch `trackhat-2026.1`. The workflow

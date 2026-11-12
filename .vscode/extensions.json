@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "anthropic.claude-code",
+        "ms-vscode.cpptools"
+    ],
+    // CMake Tools would configure its own build folder on open; builds go through scripts/windows-local/build.bat.
+    "unwantedRecommendations": [
+        "ms-vscode.cmake-tools"
+    ]
+}

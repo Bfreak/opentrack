@@ -1,93 +1,102 @@
-# Status (as of 2026-11-10)
+# Status (as of 2026-11-12)
+
+Read this first, then `CLAUDE.md`. Everything below is the true state at the end of the last session.
 
 ## Goal
-Port Trackhat's custom OpenTrack (sensor v2 / v3, 2023-24) onto the latest OpenTrack release (`opentrack-2026.1.0`)
-with the same feature set plus upstream improvements, fork it to the owner's GitHub, and deliver builds the owner can test.
-The owner can't compile, so builds/tests are done by Claude.
+Trackhat's custom OpenTrack, rebuilt on OpenTrack 2026.1.0 and released as **Trackhat OpenTrack 3.3**.
+The owner (James) is not a C++ developer: Claude builds, tests and hands back something runnable.
 
-## Done
-- Branch `trackhat-2026.1` = 2026.1.0 tag + real 3-way merge of `trackhat-sensor-v2` + cherry-picked upstream fixes
-  (88 port commits on the 2026.1.0 tag up to `29cb2940`, then docs/CI commits). See `PORTING-NOTES.md`.
-- **Linux**: builds, GUI smoke-tested under Xvfb, settings persist, NN models load, built-in NN unit tests pass.
-- **Windows (MinGW-w64 cross-compile, x64)**: builds, packages as a portable zip, GUI opens and update check works under Wine 9.
-  Zip delivered to owner: `TrackHat-OpenTrack-2026.1-win64-test.zip` (86 MB, 142 files). Rebuild recipe: `WINDOWS-BUILD.md`.
-- Changelog written: `CHANGELOG.md`.
-- **Moved to Claude Code on the owner's Windows PC** (2026-11-08): repo at `Documents\TrackHatOpentrackProject\opentrack-trackhat`,
-  restored from the handoff bundle. Fork: https://github.com/Bfreak/opentrack (remote `fork`);
-  branch `trackhat-2026.1` and tag `opentrack-2026.1.0` pushed. `origin` is still upstream `opentrack/opentrack`.
-- **GitHub Actions MSVC build** (2026-11-08): `.github/workflows/trackhat-windows.yml` runs on pushes to `trackhat-*`
-  branches/tags, PRs and manually. MSVC 2022 + Qt 6.8.3 (msvc2022_64) + static OpenCV 4.10.0
-  (built and cached in the workflow, IPP off) + ORT 1.17.3 (download retried, cached) + oscpack (built with `cl`) + `opentrack-depends` (vJoy/FSUIPC/SimConnect SDKs).
-  Outputs two artifacts: Inno Setup installer (`installer/opentrack-installer.iss`, ~85 MB) and a portable zip.
-  Bundles the MSVC runtime DLLs app-locally (no VC++ redist install needed) and the Qt TLS/imageformats/styles plugins.
-  Upstream's generic `cmake.yml` is now manual-only (it doesn't build the Trackhat variant and failed on every push).
-  Latest green run: https://github.com/Bfreak/opentrack/actions/runs/42476892319 (installer
-  `opentrack-2026.1.0-97-g0554956c-win32-setup.exe`, 86 MB). Installer is unsigned, so expect a SmartScreen warning.
-  Earlier runs failed on flaky GitHub release downloads (Ninja, ORT), which is why nothing is downloaded from release pages uncached.
+## Where things are
+- **Repo:** `Documents\TrackHatOpentrackProject\opentrack-trackhat` on the owner's Windows 11 PC.
+  Remote `fork` = https://github.com/Bfreak/opentrack (push here). Remote `origin` = upstream opentrack (never push).
+  Never open a PR with `gh pr create` without `--repo Bfreak/opentrack`: the default base would be upstream.
+- **Branch:** `trackhat-2026.1` is the release branch and holds everything. `trackhat-head-test` and `trackhat-ui-theme`
+  are fully merged into it (fast-forward) and can be deleted, locally and on the fork.
+- **Release:** tag `trackhat-opentrack-3.3` at `abb0eb8e`. Installer `trackhat-opentrack-3.3-win64-setup.exe`
+  (165 MB, sha256 starts `25d9399d`) is in `Documents\TrackHatOpentrackProject\release\` and in the artifacts of
+  https://github.com/Bfreak/opentrack/actions/runs/42810744050. Claude tagged it final without asking first, so the
+  installer carries the release name; the owner hasn't confirmed 3.3 as final.
+- **Not published.** trackhat.org still advertises `trackhat-opentrack-3.2`. To publish: upload the installer, then set
+  the website line to `SOFTWARE-UPDATE-V3: trackhat-opentrack-3.3` (3.2 installs are notified as soon as it changes).
+- **Local build:** `scripts\windows-local\build.bat` → `..\build-local\install\opentrack.exe` (deps in `..\deps`,
+  see `WINDOWS-LOCAL-BUILD.md`). It has no vJoy and no OSC; those only build in CI.
+- **CI:** `.github/workflows/trackhat-windows.yml` builds on every push to `trackhat-*` branches and tags
+  (about 10 minutes, installer + portable zip as artifacts). All runs up to `b25f1277` are green.
+- **Workflow:** from 2026-11-12 the owner works in **VS Code** (Claude Code extension). Tasks are in `.vscode/tasks.json`
+  (Terminal > Run Task): build, run, UI self-test, scene screenshots, CI status.
 
-- **Head-tracking test window** (2026-11-08, branch `trackhat-head-test`): "Test head tracking" button opens a
-  3D Cockpit / Race car / Soldier view driven by the mapped pose. See `HEAD-TEST.md`. Built and checked locally
-  with screenshots of every scene from six head poses. The owner tried the first version with live tracking ("works beautifully").
-  Upgraded the same day: FlightGear C172P cockpit, Khronos CarConcept car, PBR renderer with shadows. Installer 165 MB
-  (limit 300 MB), CI: https://github.com/Bfreak/opentrack/actions/runs/42512474592. **Upgrade not yet tried live.** Not merged into `trackhat-2026.1`.
-- **Local Windows build** on the owner's PC (2026-11-08): `scripts/windows-local/build.bat`, deps in `../deps`. See `WINDOWS-LOCAL-BUILD.md`.
+## Open requests from the owner (2026-11-11) - NOT STARTED
+The owner listed these as bugs/issues, adding that some may be misunderstandings of the current configuration.
+The request was interrupted before any work or investigation, so check current behaviour first.
+1. **Camera should change immediately** when selected in the tracker's camera list, even while tracking is running.
+   Start at `tracker-neuralnet/ftnoir_tracker_neuralnet.cpp`: `settings_.camera_name` is read when the camera is opened
+   (around line 624) and tied to `ui_.cameraName` (around line 816).
+2. **A detected TrackHat sensor should always be the default camera.** Today an empty name or "TrackHat sensor" selects it
+   (same file, around line 627); check what happens when the sensor is absent, or present under another name or index.
+3. **New exposure preset "Auto", as the default**, which sets the camera's exposure to automatic.
+   Presets are `exposure_preset` in `video-opencv/settings.hpp` (keep the existing numeric values: profiles depend on them),
+   applied in `video-opencv/impl-camera.cpp` `cam::set_exposure`, listed in the tracker dialog (around line 826).
+   Enumerator names must not be `near`/`far` (Windows macros).
+4. **Pose preview:** make the head and the reticle about **60% of their current size**, and **80% opaque**.
+   In `pose-widget/pose-widget.cpp` `paintEvent`: `unit = height() * .21f`, reticle radius `unit * 1.50f`; the head layer is
+   drawn with `p.drawImage(rect(), layer)` and the reticle in `draw_reticle`.
 
-- **UI theme "Midnight"** (2026-11-08, branch `trackhat-ui-theme`, built on `trackhat-head-test`): chosen by the owner
-  from three prototypes. It's the default (palette + stylesheet in `gui/themes/midnight.qss`, loaded by `gui/init.cpp`). The curve editor colours are themeable.
-  The Profile dropdown is now under Output and both are full width. The pose preview's 2D octopus is replaced by a software-rendered
-  3D mannequin head (`pose-widget/`), on a darker grid. `OPENTRACK_UI_SNAPSHOT=<dir>` captures the windows for review.
-  Not yet checked by the owner in the running app.
+After these: rebuild, check with the self-test, then decide with the owner whether to move the `3.3` tag or tag `3.3.1`.
 
-- **Final 3.3 changes** (2026-11-10, owner's list):
-  - **Output to all protocols at once** (`logic/multi-protocol.*`): every enabled protocol is started; one that can't start
-    (e.g. SimConnect without FSX, vJoy without its driver) is skipped and reported, and never blocks tracking. The vJoy
-    "driver problem" message box is removed for the same reason. Default: everything on except mouse emulation.
-    Stored per profile as `protocol-enabled-<module>` in the `modules` section; the old `protocol-dll` key is ignored.
-  - **Options > Protocols** tab (third tab, built in `gui/options-dialog.cpp`): a checkbox, status ("Active" / "Not available: ...")
-    and a Settings button per protocol. Ticking mouse emulation shows a warning that also lists missing pause/stop shortcuts.
-    Changes apply at the next tracking start. The Output box is gone from the main window; the profile button shows a "+".
-  - **Pose preview** (`pose-widget/`): human-like mannequin head (no neck, ears, nose, lips), a 3D crosshair through the head
-    that is hidden where the head covers it, and a reticle ring with two markers that circle once every 8 s. The markers
-    stop and turn red while tracking is paused (`pipeline::is_enabled()`). When stopped the head is hidden and
-    "tracking stopped" is shown in the brand font Kinishinai NBP (CC BY-SA 3.0, embedded from `pose-widget/fonts`).
-  - Checked on the owner's PC with the real sensor through the screenshot self-test
-    (`OPENTRACK_UI_SNAPSHOT=<dir>` plus `OPENTRACK_UI_SNAPSHOT_START=1` to start tracking for 3 s):
-    FlightGear, freetrack and UDP reported Active, SimConnect "Not available", mouse Off; the warning dialog rendered.
-    **Not checked: an actual game receiving data with several protocols on at once, vJoy/OSC (CI build only), pause colours live.**
-  - Installer file is now named `<version>-win64-setup.exe`.
-- **Release wrap-up** (2026-11-10): `trackhat-head-test` and `trackhat-ui-theme` are merged into `trackhat-2026.1` (fast-forward).
-  Tagged **`trackhat-opentrack-3.3`** at `abb0eb8e`; CI: https://github.com/Bfreak/opentrack/actions/runs/42810744050.
-  Installer `trackhat-opentrack-3.3-win64-setup.exe` (165 MB, sha256 `25d9399d...4903`), also saved on the owner's PC in
-  `Documents/TrackHatOpentrackProject/release/`. It is unsigned (SmartScreen warning). Not yet installed or run by anyone.
-  Still to do by the owner to publish: test it, upload it, then set the website line to `SOFTWARE-UPDATE-V3: trackhat-opentrack-3.3`.
-  If a fix is needed before publishing, fix on `trackhat-2026.1` and either move the tag or tag `trackhat-opentrack-3.3.1`.
+## What 3.3 contains (all merged)
+- **Port:** 2026.1.0 + 3-way merge of `trackhat-sensor-v2` + cherry-picked upstream fixes. See `PORTING-NOTES.md`.
+- **Update check:** version comes from `trackhat-opentrack-*` tags; the dialog only appears when trackhat.org advertises a
+  higher version (`opentrack/software-update-dialog.cpp`). Pre-releases (`-rcN`) are offered the matching final.
+- **Head-tracking test window** (`head-test/`, `HEAD-TEST.md`): Cockpit (FlightGear C172P, GPL-2.0+), Race car
+  (Khronos CarConcept, CC-BY 4.0), Soldier (Poly Haven CC0 props); PBR renderer with shadows; 77 MB of assets.
+- **Midnight theme** (`gui/themes/midnight.qss`, default; `OPENTRACK_THEME=none` for the old look). Chosen by the owner
+  from three prototypes; the other two were removed.
+- **Main window:** Profile is a full-width row with a "+" button for new profiles; no Output box.
+- **Output to all protocols at once** (`logic/multi-protocol.*`): default is everything except mouse emulation, stored per
+  profile as `protocol-enabled-<module>` in the `modules` section (the old `protocol-dll` key is ignored). A protocol
+  that can't start is skipped and reported, never blocking tracking. vJoy's "driver problem" message box was removed.
+- **Options > Protocols** (third tab, `gui/options-dialog.cpp`): checkbox, status and Settings per protocol; a warning
+  before mouse emulation is enabled, listing missing pause/stop shortcuts. Changes apply at the next tracking start.
+- **Pose preview** (`pose-widget/`): vector perspective grid; mannequin head without a neck; 3D crosshair hidden where the
+  head covers it; reticle ring with two markers circling every 8 s, which stop and turn red when paused
+  (`pipeline::is_enabled()`); when stopped, "tracking stopped" in Kinishinai NBP (CC BY-SA 3.0, `pose-widget/fonts`).
+- **Installer:** Inno Setup, MSVC runtime bundled app-locally, Qt TLS/image/style plugins added, named `<version>-win64-setup.exe`.
 
-## Blocked / pending
-1. **Owner testing of the 3.3 installer in real games**: camera detection, exposure presets, tracking, update popup,
-   and games picking up tracking with all protocols on (TrackIR/freetrack titles first).
+## Verified, and how
+- Local build on the owner's PC (RTX 3090, Windows 11), reviewed through screenshots:
+  - `OPENTRACK_UI_SNAPSHOT=<dir>` saves the main, Options, Protocols, Mapping and test windows, the mouse warning, and the
+    pose preview in every state (`head-*.png` at real size, `big-*.png` enlarged), then quits.
+  - Add `OPENTRACK_UI_SNAPSHOT_START=1` to start tracking for 3 s first (needs the sensor).
+  - `OPENTRACK_HEAD_TEST_SNAPSHOT=<dir>` renders each test scene from six poses and writes frame times to `log.txt`.
+- 2026-11-10 self-test with the real sensor: tracking started, the head followed the live pose; FlightGear, freetrack
+  and UDP "Active", SimConnect "Not available: Install FSX/Prepar3D SimConnect SDK", mouse "Off"; the warning appeared.
+- The owner ran the first version of the test window with live tracking: "works beautifully" (before the scene upgrade).
 
-## Suggested next steps (in order)
-1. ~~Push the branch to the owner's fork.~~ Done 2026-11-08.
-2. ~~Add GitHub Actions CI with an MSVC build and Inno Setup installer.~~ Done 2026-11-08 (Windows only; no Linux CI job yet).
-3. ~~Fix the update popup.~~ Done 2026-11-08. This release is **trackhat-opentrack-3.3** (owner's choice).
-   Version string = `git describe --match 'trackhat-opentrack-*'`; tag `trackhat-opentrack-3.3-rc1` is pushed
-   and built: https://github.com/Bfreak/opentrack/actions/runs/42494580279 (artifacts `trackhat-opentrack-3.3-rc1-*`).
-   The check now shows the dialog only when the site's version number is higher than the running one
-   (`opentrack/software-update-dialog.cpp`). The site can stay at `trackhat-opentrack-3.2` while 3.3 is in testing.
-   **When 3.3 ships:** tag the release commit `trackhat-opentrack-3.3`, push the tag (CI builds the installer),
-   publish it, then change the website line to `SOFTWARE-UPDATE-V3: trackhat-opentrack-3.3`. Old 3.2 installs
-   still use exact string comparison, so they get notified as soon as the line changes.
-   The installer name contains "win32" (from the old script) although the build is x64; see item 4.
-4. Review the Trackhat Inno Setup script against what is now installed (it builds in CI but its contents are unreviewed).
-   It has no `ArchitecturesInstallIn64BitMode`, so the x64 build installs to `Program Files (x86)`; check where 3.2 installed
-   before changing it, so an upgrade replaces the old copy instead of leaving two.
-5. ~~Bundle VC++ redist~~: done app-locally in CI. Not checked on a clean PC without the redist.
-6. Hardware validation: exposure presets Near/Medium/Far/Custom on a real sensor; compare 0.5-small vs 0.2-small tracking.
-7. Optionally consider upstream commits not taken (DBus, V4L2 ioctl workaround, OpenCV 5 fixes) if Linux users matter.
-8. Cleanup: `variant/default/_variant.cmake` and `todo.md` are still in the tree (re-added by the merge) although the
-   notes say they were dropped. Neither is used by the build.
+## Not verified (say so in reports)
+- The **3.3 installer has not been run** by anyone, on any PC. Nothing was tested on a clean PC without the VC++ redist.
+- No **game** has been tried with several protocols on at once. vJoy and OSC only compile (CI); never run.
+- The red paused markers were only seen in a rendered frame, not while pausing live.
+- The upgraded test scenes, the Midnight theme and the final head have not been confirmed by the owner in the running app.
+- Exposure presets on real hardware; tracking quality of `head-pose-0.5-small` vs `0.2-small`.
+- Performance of the test window on integrated graphics; machines without OpenGL 3.3; the Linux build of the new modules.
 
-## Task list (current)
-- Port + merge + Linux build/test: completed
-- Fork and push: completed 2026-11-08 (Bfreak/opentrack)
-- Windows build: MinGW zip (Wine-tested) + MSVC installer/zip from CI (untested on Windows)
+## Known rough edges (noticed, not fixed)
+- Pose preview, front view: the eye sockets read as one dark band across the face.
+- While tracking, the "Preview" checkbox sits near the reticle's lower marker.
+- Protocol names in the tab come from the modules as they are ("mouse emulation", "freetrack").
+- The installer has no `ArchitecturesInstallIn64BitMode`, so the 64-bit build installs to `Program Files (x86)`. Left alone
+  because 3.2 used the same script; confirm where 3.2 installs before changing it, so an upgrade replaces the old copy.
+- The installer is unsigned (SmartScreen warning).
+- `variant/default/_variant.cmake` and `todo.md` are still in the tree (unused; the notes say they were dropped).
+- GitHub downloads and pushes were flaky at times ("Could not resolve host"); retrying worked.
+
+## Later ideas
+- Linux CI job; upstream commits not taken (DBus, V4L2 ioctl workaround, OpenCV 5 fixes).
+- Apply protocol changes without restarting tracking.
+
+## History
+- 2026-11-08: moved from a cloud chat to Claude Code on this PC; fork created; MSVC CI; update-check fix; `3.3-rc1`;
+  test window built and upgraded; Midnight theme chosen.
+- 2026-11-10: all-protocols output, Protocols tab, new pose preview; merged; tagged `3.3`; installer built.
+- 2026-11-11: owner listed four fixes (above); interrupted before work started.
+- 2026-11-12: status rewritten; VS Code workflow set up.

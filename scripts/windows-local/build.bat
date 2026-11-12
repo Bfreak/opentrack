@@ -21,6 +21,7 @@ if "%1"=="reconfigure" if exist "%BUILD%\CMakeCache.txt" del "%BUILD%\CMakeCache
 if not exist "%BUILD%\CMakeCache.txt" (
   cmake -G Ninja -S "%REPO%" -B "%BUILD%" ^
     -DCMAKE_BUILD_TYPE=Release ^
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ^
     "-DQt6_DIR=%DEPS%\qt\6.8.3\msvc2022_64\lib\cmake\Qt6" ^
     "-DCMAKE_PREFIX_PATH=%DEPS%\qt\6.8.3\msvc2022_64" ^
     "-DOpenCV_DIR=%DEPS%\opencv\build" ^

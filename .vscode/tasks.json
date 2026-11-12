@@ -1,0 +1,70 @@
+{
+    // TrackHat OpenTrack tasks for the owner's Windows PC. Run with Terminal > Run Task, or Ctrl+Shift+B for the build.
+    // See docs/trackhat/WINDOWS-LOCAL-BUILD.md for the dependencies in ..\deps.
+    "version": "2.0.0",
+    "options": { "shell": { "executable": "cmd.exe", "args": ["/d", "/c"] } },
+    "tasks": [
+        {
+            "label": "TrackHat: Build",
+            "type": "shell",
+            "command": "scripts\\windows-local\\build.bat",
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": "$msCompile",
+            "presentation": { "reveal": "always", "clear": true }
+        },
+        {
+            "label": "TrackHat: Reconfigure and build",
+            "type": "shell",
+            "command": "scripts\\windows-local\\build.bat reconfigure",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "TrackHat: Run",
+            "type": "process",
+            "command": "${workspaceFolder}/../build-local/install/opentrack.exe",
+            "problemMatcher": [],
+            "presentation": { "reveal": "silent" }
+        },
+        {
+            "label": "TrackHat: Build and run",
+            "dependsOn": ["TrackHat: Build", "TrackHat: Run"],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "TrackHat: UI screenshots (self-test)",
+            "detail": "Saves every window and the pose preview states to ../build-local/snapshots/ui, then quits",
+            "type": "process",
+            "command": "${workspaceFolder}/../build-local/install/opentrack.exe",
+            "options": { "env": { "OPENTRACK_UI_SNAPSHOT": "${workspaceFolder}/../build-local/snapshots/ui" } },
+            "problemMatcher": []
+        },
+        {
+            "label": "TrackHat: UI screenshots with live tracking (needs the sensor)",
+            "detail": "Same, but starts tracking for 3 seconds first so protocol statuses are real",
+            "type": "process",
+            "command": "${workspaceFolder}/../build-local/install/opentrack.exe",
+            "options": {
+                "env": {
+                    "OPENTRACK_UI_SNAPSHOT": "${workspaceFolder}/../build-local/snapshots/ui-live",
+                    "OPENTRACK_UI_SNAPSHOT_START": "1"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "TrackHat: Test-scene screenshots",
+            "detail": "Renders the Cockpit, Race car and Soldier scenes from six poses to ../build-local/snapshots/scenes",
+            "type": "process",
+            "command": "${workspaceFolder}/../build-local/install/opentrack.exe",
+            "options": { "env": { "OPENTRACK_HEAD_TEST_SNAPSHOT": "${workspaceFolder}/../build-local/snapshots/scenes" } },
+            "problemMatcher": []
+        },
+        {
+            "label": "TrackHat: CI status",
+            "type": "shell",
+            "command": "gh run list -R Bfreak/opentrack --limit 8",
+            "problemMatcher": []
+        }
+    ]
+}

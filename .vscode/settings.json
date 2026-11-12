@@ -1,0 +1,9 @@
+{
+    // IntelliSense reads the real compile flags from the local build (run "TrackHat: Build" once).
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/../build-local/compile_commands.json",
+    "C_Cpp.default.cppStandard": "c++20",
+    "cmake.configureOnOpen": false,
+    "files.associations": { "*.qss": "css", "*.iss": "ini", "*.hxx": "cpp" },
+    "files.exclude": { "**/lang/*.ts": true },
+    "search.exclude": { "**/lang/*.ts": true, "head-test/assets": true, "head-test/3rdparty": true }
+}
